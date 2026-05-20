@@ -3,9 +3,9 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>HTML in Canvas Cloth</title>
+    <title>KANA星空影院</title>
     <link rel="icon" href="data:," />
-    <link rel="stylesheet" href="src/styles.css?v=20260520-fan-switch" />
+    <link rel="stylesheet" href="src/styles.css?v=20260520-ocean-cinema" />
     <script type="importmap">
       {
         "imports": {
@@ -29,7 +29,7 @@
 
       <section class="hud" aria-label="Scene controls">
         <div class="hud-row hud-title">
-          <span data-i18n="ui.title">HTML in Canvas</span>
+          <span data-i18n="ui.title">KANA星空影院</span>
           <button id="mobile-controls-close" class="mobile-controls-close" type="button" aria-label="Close controls">×</button>
           <span id="fps">60 FPS</span>
         </div>
@@ -103,6 +103,10 @@
         </div>
         <div class="control-group night-controls">
           <div class="group-title" data-i18n="ui.lightControls">Cinema light</div>
+          <label class="toggle-line">
+            <span data-i18n="ui.boatLight">Boat light</span>
+            <input id="boat-light" type="checkbox" checked />
+          </label>
           <label class="control-line">
             <span data-i18n="ui.lightDirection">Light dir</span>
             <input id="light-direction" type="range" min="-55" max="55" value="0" step="1" />
@@ -136,7 +140,7 @@
 
       <div class="status-strip">
         <span id="status-dot"></span>
-        <span id="status-text">Live HTML texture</span>
+        <span id="status-text">Live cinema guide</span>
       </div>
 
       <article id="html-source" aria-hidden="true">
@@ -144,7 +148,7 @@
           <header class="source-nav">
             <strong class="source-brand">
               <img src="assets/kanaworks-ai-logo.jpg" alt="" />
-              <span data-i18n="source.brand">Canvas Cinema Guide</span>
+              <span data-i18n="source.brand">KANA星空影院</span>
             </strong>
             <nav>
               <span data-i18n="source.nav.overview">Start</span>
@@ -223,6 +227,6 @@
         </div>
       </article>
     </main>
-    <script type="module" src="src/main.js?v=20260520-fan-switch"></script>
+    <script type="module" src="src/main.js?v=20260520-ocean-cinema"></script>
   </body>
 </html>

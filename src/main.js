@@ -24,6 +24,7 @@ const fanYInput = document.querySelector("#fan-y");
 const fanZInput = document.querySelector("#fan-z");
 const fanDirectionInput = document.querySelector("#fan-direction");
 const resetFanButton = document.querySelector("#reset-fan");
+const boatLightInput = document.querySelector("#boat-light");
 const lightDirectionInput = document.querySelector("#light-direction");
 const lightSizeInput = document.querySelector("#light-size");
 const lightStrengthInput = document.querySelector("#light-strength");
@@ -44,12 +45,12 @@ const fanDefaults = {
 
 const translations = {
   en: {
-    "ui.title": "HTML in Canvas",
+    "ui.title": "KANA星空影院",
     "ui.hero": "Start",
     "ui.performance": "Fan",
     "ui.docs": "Night",
     "ui.upload": "Upload Media",
-    "ui.reset": "HTML",
+    "ui.reset": "Guide",
     "ui.fanEnabled": "Fan",
     "ui.resetFan": "Reset fan",
     "ui.wind": "Wind",
@@ -61,14 +62,15 @@ const translations = {
     "ui.autoplay": "Auto text",
     "ui.fanControls": "Fan coordinates",
     "ui.fanDirection": "Direction",
-    "ui.lightControls": "Cinema light",
+    "ui.lightControls": "Boat light",
+    "ui.boatLight": "Boat light",
     "ui.lightDirection": "Light dir",
     "ui.lightSize": "Light size",
     "ui.lightStrength": "Strength",
     "ui.lightRange": "Range",
     "ui.starGlow": "Star glow",
     "ui.controls": "Controls",
-    "status.html": "Live HTML texture",
+    "status.html": "Live cinema guide",
     "status.media": "Media texture",
     "status.video": "Video texture",
     "status.capture": "DOM recaptured",
@@ -80,7 +82,7 @@ const translations = {
     "status.fanReset": "Fan reset",
     "status.fanOn": "Fan on",
     "status.fanOff": "Fan off",
-    "source.brand": "Canvas Cinema Guide",
+    "source.brand": "KANA星空影院",
     "source.nav.overview": "Start",
     "source.nav.performance": "Fan",
     "source.nav.docs": "Night",
@@ -102,22 +104,22 @@ const translations = {
     "performance.featureB.body": "Use Reset fan if the fan moves out of view or you want to return to the balanced starting point.",
     "docs.eyebrow": "Night cinema",
     "docs.title": "Open-air screen",
-    "docs.lead": "Turn on Night cinema for a romantic star field, then adjust light direction, size, strength, range, and star glow.",
+    "docs.lead": "Turn on Night cinema for a sea, a wooden boat, two seagulls holding the curtain, and a soft round boat light on the screen.",
     "docs.cardA": "Wheel zooms only the camera view.",
     "docs.cardB": "Content scroll moves only the instruction page.",
     "docs.cardC": "Upload again any time to replace the curtain texture.",
     "docs.linkA": "Upload media",
     "docs.linkB": "Move the fan",
     "docs.linkC": "Drag curtain",
-    "docs.linkD": "Adjust lights",
+    "docs.linkD": "Boat light",
   },
   zh: {
-    "ui.title": "画布中的 HTML",
+    "ui.title": "KANA星空影院",
     "ui.hero": "开始",
     "ui.performance": "风扇",
     "ui.docs": "星空",
     "ui.upload": "上传媒体",
-    "ui.reset": "HTML",
+    "ui.reset": "说明页",
     "ui.fanEnabled": "风扇",
     "ui.resetFan": "重置风扇",
     "ui.wind": "风力",
@@ -129,14 +131,15 @@ const translations = {
     "ui.autoplay": "自动播放",
     "ui.fanControls": "风扇坐标",
     "ui.fanDirection": "风向角度",
-    "ui.lightControls": "影院灯光",
+    "ui.lightControls": "小船灯光",
+    "ui.boatLight": "船灯",
     "ui.lightDirection": "灯光方向",
     "ui.lightSize": "光束大小",
     "ui.lightStrength": "强弱",
     "ui.lightRange": "范围",
     "ui.starGlow": "星光浪漫度",
     "ui.controls": "控制",
-    "status.html": "实时 HTML 纹理",
+    "status.html": "实时影院说明",
     "status.media": "媒体纹理",
     "status.video": "视频纹理",
     "status.capture": "DOM 已重新捕获",
@@ -148,7 +151,7 @@ const translations = {
     "status.fanReset": "风扇已重置",
     "status.fanOn": "风扇已开启",
     "status.fanOff": "风扇已关闭",
-    "source.brand": "星空幕布指南",
+    "source.brand": "KANA星空影院",
     "source.nav.overview": "开始",
     "source.nav.performance": "风扇",
     "source.nav.docs": "星空",
@@ -170,22 +173,22 @@ const translations = {
     "performance.featureB.body": "风扇移出视野或想回到平衡起点时，点击重置风扇。",
     "docs.eyebrow": "星空影院",
     "docs.title": "露天电影屏幕",
-    "docs.lead": "开启星空影院后，可以调整灯光方向、大小、强弱、范围和星光浪漫度。",
+    "docs.lead": "开启星空影院后，下方会变成海洋，小木船随潮汐摇摆，两只海鸥衔着幕布，船灯在屏幕上投下柔和圆光。",
     "docs.cardA": "滚轮只负责缩放视角。",
     "docs.cardB": "内容滚动只移动幕布说明页。",
     "docs.cardC": "随时再次上传，替换幕布画面。",
     "docs.linkA": "上传媒体",
     "docs.linkB": "移动风扇",
     "docs.linkC": "拖动幕布",
-    "docs.linkD": "调整灯光",
+    "docs.linkD": "船灯开关",
   },
   ja: {
-    "ui.title": "Canvas 内の HTML",
+    "ui.title": "KANA星空影院",
     "ui.hero": "開始",
     "ui.performance": "扇風機",
     "ui.docs": "星空",
     "ui.upload": "メディア追加",
-    "ui.reset": "HTML",
+    "ui.reset": "案内",
     "ui.fanEnabled": "扇風機",
     "ui.resetFan": "扇風機リセット",
     "ui.wind": "風量",
@@ -197,14 +200,15 @@ const translations = {
     "ui.autoplay": "自動再生",
     "ui.fanControls": "扇風機座標",
     "ui.fanDirection": "風向き",
-    "ui.lightControls": "シネマ照明",
+    "ui.lightControls": "船の灯り",
+    "ui.boatLight": "船の灯り",
     "ui.lightDirection": "照明方向",
     "ui.lightSize": "光の大きさ",
     "ui.lightStrength": "強さ",
     "ui.lightRange": "範囲",
     "ui.starGlow": "星の輝き",
     "ui.controls": "操作",
-    "status.html": "ライブ HTML テクスチャ",
+    "status.html": "ライブシネマ案内",
     "status.media": "メディアテクスチャ",
     "status.video": "動画テクスチャ",
     "status.capture": "DOM を再キャプチャ",
@@ -216,7 +220,7 @@ const translations = {
     "status.fanReset": "扇風機をリセット",
     "status.fanOn": "扇風機オン",
     "status.fanOff": "扇風機オフ",
-    "source.brand": "星空スクリーン案内",
+    "source.brand": "KANA星空影院",
     "source.nav.overview": "開始",
     "source.nav.performance": "扇風機",
     "source.nav.docs": "星空",
@@ -238,14 +242,14 @@ const translations = {
     "performance.featureB.body": "見失った時や初期位置に戻したい時は、扇風機リセットを使います。",
     "docs.eyebrow": "星空シネマ",
     "docs.title": "屋外映画スクリーン",
-    "docs.lead": "星空シネマをオンにすると、照明方向、大きさ、強さ、範囲、星の輝きを調整できます。",
+    "docs.lead": "星空シネマをオンにすると、海、小さな木の船、スクリーンをくわえる二羽のカモメ、柔らかな丸い船灯が現れます。",
     "docs.cardA": "ホイールは視点ズームだけを操作します。",
     "docs.cardB": "内容スクロールは説明ページだけを動かします。",
     "docs.cardC": "いつでも再アップロードして映像を差し替えられます。",
     "docs.linkA": "メディア追加",
     "docs.linkB": "扇風機移動",
     "docs.linkC": "スクリーン操作",
-    "docs.linkD": "照明調整",
+    "docs.linkD": "船の灯り",
   },
 };
 
@@ -259,6 +263,7 @@ const params = {
   lang: "en",
   scroll: Number(contentScrollInput.value),
   fanDirection: Number(fanDirectionInput.value),
+  boatLight: boatLightInput.checked,
   lightDirection: Number(lightDirectionInput.value),
   lightSize: Number(lightSizeInput.value),
   lightStrength: Number(lightStrengthInput.value),
@@ -311,6 +316,10 @@ const dragPlane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
 const dragPoint = new THREE.Vector3();
 const fanDragOffset = new THREE.Vector3();
 const localDragTarget = new THREE.Vector3();
+const boatLightSource = new THREE.Vector3();
+const boatLightTarget = new THREE.Vector3();
+const boatLightDirection = new THREE.Vector3();
+const boatLightAxis = new THREE.Vector3(0, 1, 0);
 
 const dragState = {
   mode: "none",
@@ -344,6 +353,12 @@ const clips = [
   createClip(0, clothConfig.height / 2 + 0.03, 0.02, 0.88),
 ];
 clips.forEach((clip) => clothRig.add(clip));
+
+const gulls = createGulls(clothConfig);
+gulls.forEach((gull) => clothRig.add(gull));
+
+const screenGlow = createScreenGlow();
+clothRig.add(screenGlow);
 
 const fan = createFan();
 fan.group.position.set(fanDefaults.x, fanDefaults.y, fanDefaults.z);
@@ -454,6 +469,11 @@ fanTransformControls.addEventListener("objectChange", () => {
 fanDirectionInput.addEventListener("input", () => {
   params.fanDirection = Number(fanDirectionInput.value);
   applyFanDirection();
+});
+
+boatLightInput.addEventListener("change", () => {
+  params.boatLight = boatLightInput.checked;
+  applyCinemaLight();
 });
 
 [lightDirectionInput, lightSizeInput, lightStrengthInput, lightRangeInput, starGlowInput].forEach((input) => {
@@ -817,6 +837,84 @@ function createClip(x, y, z, scale = 1) {
   return group;
 }
 
+function createGulls({ width, height }) {
+  return [
+    createGull(-1, -width / 2 + 0.3, height / 2 - 0.04),
+    createGull(1, width / 2 - 0.3, height / 2 - 0.04),
+  ];
+}
+
+function createGull(side, x, y) {
+  const group = new THREE.Group();
+  const inward = -side;
+  group.position.set(x, y, 0.28);
+  group.scale.setScalar(0.98);
+  group.visible = false;
+  group.userData.baseY = y;
+  group.userData.side = side;
+  group.userData.wingSide = inward;
+  group.userData.phase = Math.random() * Math.PI * 2;
+
+  const featherMaterial = new THREE.MeshStandardMaterial({ color: 0xf8fbff, roughness: 0.58, metalness: 0.02 });
+  const wingMaterial = new THREE.MeshStandardMaterial({ color: 0xeaf2ff, roughness: 0.62, metalness: 0.02, side: THREE.DoubleSide });
+  const beakMaterial = new THREE.MeshStandardMaterial({ color: 0xf3a642, roughness: 0.48, metalness: 0 });
+  const eyeMaterial = new THREE.MeshBasicMaterial({ color: 0x111827 });
+
+  const body = new THREE.Mesh(new THREE.SphereGeometry(0.16, 20, 14), featherMaterial);
+  body.position.set(inward * 0.26, 0.16, 0.04);
+  body.scale.set(1.38, 0.72, 0.58);
+  body.castShadow = true;
+  group.add(body);
+
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.09, 18, 12), featherMaterial);
+  head.position.set(inward * 0.1, 0.15, 0.06);
+  head.castShadow = true;
+  group.add(head);
+
+  const beak = new THREE.Mesh(new THREE.ConeGeometry(0.032, 0.18, 16), beakMaterial);
+  beak.position.set(inward * 0.015, 0.14, 0.06);
+  beak.rotation.z = side < 0 ? Math.PI / 2 : -Math.PI / 2;
+  beak.castShadow = true;
+  group.add(beak);
+
+  const eye = new THREE.Mesh(new THREE.SphereGeometry(0.012, 8, 8), eyeMaterial);
+  eye.position.set(inward * 0.065, 0.18, 0.13);
+  group.add(eye);
+
+  const wingShape = new THREE.Shape();
+  wingShape.moveTo(0, 0);
+  wingShape.quadraticCurveTo(inward * 0.18, 0.26, inward * 0.62, 0.34);
+  wingShape.quadraticCurveTo(inward * 0.46, 0.06, 0, 0);
+  const wingGeometry = new THREE.ShapeGeometry(wingShape);
+  const leftWing = new THREE.Mesh(wingGeometry, wingMaterial);
+  const rightWing = new THREE.Mesh(wingGeometry, wingMaterial);
+  leftWing.position.set(inward * 0.22, 0.15, 0.02);
+  rightWing.position.set(inward * 0.22, 0.15, -0.02);
+  leftWing.castShadow = true;
+  rightWing.castShadow = true;
+  group.add(leftWing, rightWing);
+
+  group.userData.leftWing = leftWing;
+  group.userData.rightWing = rightWing;
+  return group;
+}
+
+function createScreenGlow() {
+  const material = new THREE.MeshBasicMaterial({
+    color: 0xffdfad,
+    transparent: true,
+    opacity: 0,
+    depthWrite: false,
+    depthTest: false,
+    blending: THREE.AdditiveBlending,
+  });
+  const glow = new THREE.Mesh(new THREE.CircleGeometry(1, 64), material);
+  glow.position.set(0, -0.38, 0.13);
+  glow.visible = false;
+  glow.renderOrder = 4;
+  return glow;
+}
+
 function createFan() {
   const group = new THREE.Group();
   const white = new THREE.MeshPhysicalMaterial({
@@ -978,37 +1076,115 @@ function createCinemaSet() {
   const group = new THREE.Group();
   group.visible = false;
 
-  const benchMaterial = new THREE.MeshStandardMaterial({ color: 0x111827, roughness: 0.82, metalness: 0.05 });
-  const projectorMaterial = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.46, metalness: 0.22 });
-  const beamMaterial = new THREE.MeshBasicMaterial({
-    color: 0x9bc7ff,
+  const oceanGeometry = new THREE.PlaneGeometry(34, 18, 56, 24);
+  const oceanBase = new Float32Array(oceanGeometry.attributes.position.array);
+  const oceanPhases = new Float32Array(oceanGeometry.attributes.position.count);
+  for (let i = 0; i < oceanPhases.length; i += 1) {
+    oceanPhases[i] = Math.random() * Math.PI * 2;
+  }
+  const oceanMaterial = new THREE.MeshPhysicalMaterial({
+    color: 0x0c4261,
+    emissive: 0x031726,
+    emissiveIntensity: 0.26,
+    roughness: 0.34,
+    metalness: 0.06,
     transparent: true,
-    opacity: 0.08,
-    depthWrite: false,
+    opacity: 0.92,
     side: THREE.DoubleSide,
   });
+  const ocean = new THREE.Mesh(oceanGeometry, oceanMaterial);
+  ocean.rotation.x = -Math.PI / 2;
+  ocean.position.set(0, -2.64, 3.0);
+  ocean.receiveShadow = true;
+  group.add(ocean);
 
-  for (let row = 0; row < 3; row += 1) {
-    const bench = new THREE.Mesh(new THREE.BoxGeometry(7.6 - row * 0.48, 0.08, 0.16), benchMaterial);
-    bench.position.set(0, -2.46 + row * 0.03, 4.8 + row * 0.56);
-    bench.castShadow = true;
-    group.add(bench);
-  }
+  const boat = createBoat();
+  boat.position.set(-2.18, -1.98, 2.8);
+  boat.scale.setScalar(1.08);
+  boat.rotation.y = -0.18;
+  boat.userData.baseY = boat.position.y;
+  group.add(boat);
 
-  const projector = new THREE.Mesh(new THREE.BoxGeometry(0.48, 0.26, 0.62), projectorMaterial);
-  projector.position.set(-3.6, -2.34, 5.42);
-  projector.castShadow = true;
-  group.add(projector);
-
-  const beam = new THREE.Mesh(new THREE.ConeGeometry(1.45, 4.6, 4, 1, true), beamMaterial);
-  beam.position.set(-2.45, -1.35, 3.35);
-  beam.rotation.x = Math.PI * 0.5;
-  beam.rotation.z = Math.PI * 0.25;
+  const beamMaterial = new THREE.MeshBasicMaterial({
+    color: 0xffd99a,
+    transparent: true,
+    opacity: 0,
+    depthWrite: false,
+    side: THREE.DoubleSide,
+    blending: THREE.AdditiveBlending,
+  });
+  const beam = new THREE.Mesh(new THREE.ConeGeometry(1, 1, 48, 1, true), beamMaterial);
+  beam.visible = false;
   group.add(beam);
-  group.userData.projector = projector;
-  group.userData.beam = beam;
+  group.userData = { ocean, oceanBase, oceanPhases, boat, beam };
 
   return group;
+}
+
+function createBoat() {
+  const boat = new THREE.Group();
+  boat.userData.baseY = -2.28;
+
+  const woodMaterial = new THREE.MeshStandardMaterial({ color: 0x7a4a2a, roughness: 0.68, metalness: 0.02 });
+  const darkWoodMaterial = new THREE.MeshStandardMaterial({ color: 0x3f2518, roughness: 0.78, metalness: 0.02 });
+  const lanternMaterial = new THREE.MeshBasicMaterial({ color: 0xffd47d });
+  const lanternGlass = new THREE.MeshBasicMaterial({
+    color: 0xffe5a8,
+    transparent: true,
+    opacity: 0.72,
+    blending: THREE.AdditiveBlending,
+  });
+
+  const hullShape = new THREE.Shape();
+  hullShape.moveTo(-0.74, 0);
+  hullShape.quadraticCurveTo(0, -0.34, 0.74, 0);
+  hullShape.lineTo(0.54, 0.28);
+  hullShape.quadraticCurveTo(0, 0.36, -0.54, 0.28);
+  hullShape.lineTo(-0.74, 0);
+  const hullGeometry = new THREE.ExtrudeGeometry(hullShape, {
+    depth: 0.5,
+    bevelEnabled: true,
+    bevelSize: 0.035,
+    bevelThickness: 0.025,
+    bevelSegments: 2,
+  });
+  hullGeometry.center();
+  const hull = new THREE.Mesh(hullGeometry, woodMaterial);
+  hull.castShadow = true;
+  hull.receiveShadow = true;
+  boat.add(hull);
+
+  const rim = new THREE.Mesh(new THREE.BoxGeometry(1.16, 0.055, 0.58), darkWoodMaterial);
+  rim.position.y = 0.18;
+  rim.castShadow = true;
+  boat.add(rim);
+
+  [-0.32, 0.32].forEach((x) => {
+    const seat = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.06, 0.48), darkWoodMaterial);
+    seat.position.set(x, 0.27, 0);
+    seat.castShadow = true;
+    boat.add(seat);
+  });
+
+  const lanternPost = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.018, 0.45, 14), darkWoodMaterial);
+  lanternPost.position.set(-0.18, 0.48, -0.08);
+  lanternPost.castShadow = true;
+  boat.add(lanternPost);
+
+  const lantern = new THREE.Mesh(new THREE.SphereGeometry(0.09, 18, 12), lanternGlass);
+  lantern.position.set(-0.18, 0.74, -0.08);
+  boat.add(lantern);
+
+  const lanternCore = new THREE.Mesh(new THREE.SphereGeometry(0.04, 12, 8), lanternMaterial);
+  lanternCore.position.copy(lantern.position);
+  boat.add(lanternCore);
+
+  const lightAnchor = new THREE.Object3D();
+  lightAnchor.position.copy(lantern.position);
+  boat.add(lightAnchor);
+  boat.userData.lightAnchor = lightAnchor;
+
+  return boat;
 }
 
 function addLights() {
@@ -1040,7 +1216,10 @@ function addLights() {
   projectorSpot.shadow.mapSize.set(1024, 1024);
   scene.add(projectorSpot);
 
-  return { hemi, sun, rim, projectorSpot, projectorTarget };
+  const boatPoint = new THREE.PointLight(0xffd08a, 0, 4.2, 1.8);
+  scene.add(boatPoint);
+
+  return { hemi, sun, rim, projectorSpot, projectorTarget, boatPoint };
 }
 
 function setPage(page) {
@@ -1535,6 +1714,13 @@ function applyNightMode() {
   stars.points.visible = params.night;
   stars.moon.visible = params.night;
   cinemaSet.visible = params.night;
+  cable.visible = !params.night;
+  clips.forEach((clip) => {
+    clip.visible = !params.night;
+  });
+  gulls.forEach((gull) => {
+    gull.visible = params.night;
+  });
   scene.background = new THREE.Color(params.night ? 0x080d1a : 0xeef1f3);
   scene.fog = new THREE.Fog(
     params.night ? 0x080d1a : 0xeef1f3,
@@ -1545,7 +1731,7 @@ function applyNightMode() {
 
   floor.material.color.set(params.night ? 0x101827 : 0xe9eef2);
   floor.material.roughness = params.night ? 1 : 0.92;
-  softShadow.material.opacity = params.night ? 0.28 : 1;
+  softShadow.material.opacity = params.night ? 0 : 1;
 
   lights.hemi.intensity = params.night ? 0.32 : 1.9;
   lights.hemi.color.set(params.night ? 0x526b9f : 0xffffff);
@@ -1560,24 +1746,73 @@ function applyNightMode() {
 
 function applyCinemaLight() {
   const angle = THREE.MathUtils.degToRad(params.lightDirection);
-  const source = new THREE.Vector3(-3.6, -2.15, 5.1);
   const range = params.lightRange;
-  const target = new THREE.Vector3(Math.sin(angle) * range * 0.42, -0.42, source.z - range * 0.78);
+  const boat = cinemaSet.userData.boat;
   const beam = cinemaSet.userData.beam;
+  const enabled = params.night && params.boatLight;
 
-  lights.projectorTarget.position.copy(target);
-  lights.projectorSpot.position.copy(source);
-  lights.projectorSpot.distance = range + 3;
-  lights.projectorSpot.angle = THREE.MathUtils.clamp(0.18 + params.lightSize * 0.16, 0.18, 0.55);
-  lights.projectorSpot.penumbra = 0.72;
-  lights.projectorSpot.intensity = params.night ? params.lightStrength * 1.9 : 0;
-  lights.projectorSpot.color.set(params.night ? 0xaed3ff : 0xffffff);
+  boat.userData.lightAnchor.getWorldPosition(boatLightSource);
+  boatLightTarget.set(Math.sin(angle) * 1.65, -0.42, 0.1);
 
-  const direction = target.clone().sub(source);
-  beam.position.copy(source).addScaledVector(direction, 0.5);
-  beam.scale.set(params.lightSize, direction.length() / 4.6, params.lightSize);
-  beam.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), direction.normalize());
-  beam.material.opacity = params.night ? THREE.MathUtils.clamp(params.lightStrength * 0.055, 0.02, 0.22) : 0;
+  lights.projectorTarget.position.copy(boatLightTarget);
+  lights.projectorSpot.position.copy(boatLightSource);
+  lights.projectorSpot.distance = range + 1.8;
+  lights.projectorSpot.angle = THREE.MathUtils.clamp(0.14 + params.lightSize * 0.09, 0.18, 0.34);
+  lights.projectorSpot.penumbra = 0.92;
+  lights.projectorSpot.intensity = enabled ? params.lightStrength * 0.34 : 0;
+  lights.projectorSpot.color.set(0xffd9a4);
+  lights.boatPoint.position.copy(boatLightSource);
+  lights.boatPoint.intensity = enabled ? 0.55 + params.lightStrength * 0.28 : 0;
+
+  boatLightDirection.copy(boatLightTarget).sub(boatLightSource);
+  beam.visible = enabled;
+  beam.position.copy(boatLightSource).addScaledVector(boatLightDirection, 0.5);
+  beam.scale.set(params.lightSize * 0.42, boatLightDirection.length(), params.lightSize * 0.42);
+  beam.quaternion.setFromUnitVectors(boatLightAxis, boatLightDirection.normalize());
+  beam.material.opacity = enabled ? THREE.MathUtils.clamp(params.lightStrength * 0.036, 0.018, 0.12) : 0;
+
+  screenGlow.visible = enabled;
+  screenGlow.position.set(boatLightTarget.x, boatLightTarget.y, 0.13);
+  screenGlow.scale.setScalar(THREE.MathUtils.clamp(0.72 + params.lightSize * 0.58, 0.72, 1.95));
+  screenGlow.material.opacity = enabled ? THREE.MathUtils.clamp(params.lightStrength * 0.045, 0.025, 0.12) : 0;
+}
+
+function updateCinemaSet(delta, elapsed) {
+  if (!params.night) return;
+
+  const { ocean, oceanBase, oceanPhases, boat } = cinemaSet.userData;
+  const positionAttribute = ocean.geometry.attributes.position;
+  const positions = positionAttribute.array;
+  for (let i = 0; i < positionAttribute.count; i += 1) {
+    const p = i * 3;
+    const x = oceanBase[p];
+    const y = oceanBase[p + 1];
+    positions[p + 2] =
+      Math.sin(elapsed * 0.72 + x * 0.42 + oceanPhases[i]) * 0.08 +
+      Math.sin(elapsed * 1.08 + y * 0.5 + oceanPhases[i] * 0.7) * 0.035;
+  }
+  positionAttribute.needsUpdate = true;
+
+  const tide = Math.sin(elapsed * 0.82) * 0.08 + Math.sin(elapsed * 1.7 + 0.6) * 0.025;
+  boat.position.y = boat.userData.baseY + tide;
+  boat.rotation.x = Math.sin(elapsed * 0.76 + 0.5) * 0.06;
+  boat.rotation.z = Math.sin(elapsed * 1.05) * 0.075;
+
+  updateGulls(delta, elapsed);
+  applyCinemaLight();
+}
+
+function updateGulls(delta, elapsed) {
+  gulls.forEach((gull, index) => {
+    const side = gull.userData.wingSide;
+    const wingFlap = Math.sin(elapsed * 5.4 + gull.userData.phase) * 0.46;
+    gull.position.y = gull.userData.baseY + Math.sin(elapsed * 1.25 + index) * 0.025;
+    gull.rotation.z = Math.sin(elapsed * 1.1 + index * 0.7) * 0.035;
+    gull.userData.leftWing.rotation.z = side * (0.1 + wingFlap);
+    gull.userData.rightWing.rotation.z = side * (0.1 - wingFlap * 0.72);
+    gull.userData.leftWing.rotation.x = 0.18 + Math.abs(wingFlap) * 0.18;
+    gull.userData.rightWing.rotation.x = -0.16 - Math.abs(wingFlap) * 0.12;
+  });
 }
 
 function updateStars(delta, elapsed) {
@@ -1639,6 +1874,7 @@ function animate() {
 
   updateContentAutoplay(delta, elapsed);
   updateCloth(delta, elapsed);
+  updateCinemaSet(delta, elapsed);
   updateStars(delta, elapsed);
   if (params.fanEnabled) {
     fan.bladeGroup.rotation.z -= delta * (18 + params.wind * 44);
