@@ -1,4 +1,4 @@
-# KANA星空影院
+# KANA Star Cinema / KANA星空影院
 
 An interactive Three.js night-cinema demo that renders guide content, images, or video onto a wind-driven cloth screen.
 

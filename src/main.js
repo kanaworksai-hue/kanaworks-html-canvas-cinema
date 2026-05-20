@@ -43,9 +43,11 @@ const fanDefaults = {
   z: 1.62,
 };
 
+const fanScale = 4 / 3;
+
 const translations = {
   en: {
-    "ui.title": "KANA星空影院",
+    "ui.title": "KANA Star Cinema",
     "ui.hero": "Start",
     "ui.performance": "Fan",
     "ui.docs": "Night",
@@ -82,7 +84,7 @@ const translations = {
     "status.fanReset": "Fan reset",
     "status.fanOn": "Fan on",
     "status.fanOff": "Fan off",
-    "source.brand": "KANA星空影院",
+    "source.brand": "KANA Star Cinema",
     "source.nav.overview": "Start",
     "source.nav.performance": "Fan",
     "source.nav.docs": "Night",
@@ -183,7 +185,7 @@ const translations = {
     "docs.linkD": "船灯开关",
   },
   ja: {
-    "ui.title": "KANA星空影院",
+    "ui.title": "KANA星空シネマ",
     "ui.hero": "開始",
     "ui.performance": "扇風機",
     "ui.docs": "星空",
@@ -220,7 +222,7 @@ const translations = {
     "status.fanReset": "扇風機をリセット",
     "status.fanOn": "扇風機オン",
     "status.fanOff": "扇風機オフ",
-    "source.brand": "KANA星空影院",
+    "source.brand": "KANA星空シネマ",
     "source.nav.overview": "開始",
     "source.nav.performance": "扇風機",
     "source.nav.docs": "星空",
@@ -363,7 +365,7 @@ clothRig.add(screenGlow);
 const fan = createFan();
 fan.group.position.set(fanDefaults.x, fanDefaults.y, fanDefaults.z);
 fan.group.rotation.y = -Math.PI * 0.5;
-fan.group.scale.setScalar(2);
+fan.group.scale.setScalar(fanScale);
 scene.add(fan.group);
 
 const fanTransformControls = new TransformControls(camera, renderer.domElement);
@@ -570,6 +572,7 @@ function setMobileControlsOpen(open) {
 function applyLanguage(lang) {
   params.lang = lang;
   document.documentElement.lang = lang;
+  document.title = t("ui.title");
   langButtons.forEach((button) => button.classList.toggle("is-active", button.dataset.lang === lang));
   document.querySelectorAll("[data-i18n]").forEach((element) => {
     element.textContent = t(element.dataset.i18n);
@@ -900,7 +903,10 @@ function createGull(side, x, y) {
 }
 
 function createScreenGlow() {
+  const texture = new THREE.CanvasTexture(makeSpotLightCanvas());
+  texture.colorSpace = THREE.SRGBColorSpace;
   const material = new THREE.MeshBasicMaterial({
+    map: texture,
     color: 0xffdfad,
     transparent: true,
     opacity: 0,
@@ -913,6 +919,21 @@ function createScreenGlow() {
   glow.visible = false;
   glow.renderOrder = 4;
   return glow;
+}
+
+function makeSpotLightCanvas() {
+  const spotCanvas = document.createElement("canvas");
+  spotCanvas.width = 512;
+  spotCanvas.height = 512;
+  const ctx = spotCanvas.getContext("2d");
+  const gradient = ctx.createRadialGradient(256, 256, 6, 256, 256, 252);
+  gradient.addColorStop(0, "rgba(255, 255, 255, 0.9)");
+  gradient.addColorStop(0.34, "rgba(255, 246, 220, 0.48)");
+  gradient.addColorStop(0.68, "rgba(255, 222, 170, 0.14)");
+  gradient.addColorStop(1, "rgba(255, 222, 170, 0)");
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, 512, 512);
+  return spotCanvas;
 }
 
 function createFan() {
@@ -1110,13 +1131,37 @@ function createCinemaSet() {
     transparent: true,
     opacity: 0,
     depthWrite: false,
+    depthTest: false,
     side: THREE.DoubleSide,
     blending: THREE.AdditiveBlending,
   });
   const beam = new THREE.Mesh(new THREE.ConeGeometry(1, 1, 48, 1, true), beamMaterial);
   beam.visible = false;
+  beam.renderOrder = 3;
   group.add(beam);
-  group.userData = { ocean, oceanBase, oceanPhases, boat, beam };
+
+  const beamSheetMaterial = beamMaterial.clone();
+  beamSheetMaterial.opacity = 0;
+  const beamSheetGeometry = new THREE.BufferGeometry();
+  beamSheetGeometry.setAttribute("position", new THREE.BufferAttribute(new Float32Array(9), 3));
+  const beamSheet = new THREE.Mesh(beamSheetGeometry, beamSheetMaterial);
+  beamSheet.visible = false;
+  beamSheet.renderOrder = 5;
+  group.add(beamSheet);
+
+  const beamLinesGeometry = new THREE.BufferGeometry();
+  beamLinesGeometry.setAttribute("position", new THREE.BufferAttribute(new Float32Array(18), 3));
+  const beamLinesMaterial = new THREE.LineBasicMaterial({
+    color: 0x171b24,
+    transparent: true,
+    opacity: 0,
+    depthTest: false,
+  });
+  const beamLines = new THREE.LineSegments(beamLinesGeometry, beamLinesMaterial);
+  beamLines.visible = false;
+  beamLines.renderOrder = 6;
+  group.add(beamLines);
+  group.userData = { ocean, oceanBase, oceanPhases, boat, beam, beamSheet, beamLines };
 
   return group;
 }
@@ -1486,7 +1531,6 @@ function updateCloth(delta, elapsed) {
   cloth.mesh.worldToLocal(fanLocal);
   const windAngle = THREE.MathUtils.degToRad(params.fanDirection);
   const windX = Math.sin(windAngle);
-  const windDepth = 0.45 + Math.max(0, -Math.cos(windAngle)) * 0.72 - Math.max(0, Math.cos(windAngle)) * 0.18;
   const pulse = 0.86 + Math.sin(elapsed * 4.2) * 0.12 + Math.sin(elapsed * 8.1) * 0.035;
 
   for (let y = 0; y <= rows; y += 1) {
@@ -1520,6 +1564,7 @@ function updateCloth(delta, elapsed) {
       previous[p + 2] = pz;
 
       const verticalBand = Math.sin(v * Math.PI);
+      const freeBand = smoothstep(0.04, 0.34, v);
       const lowerBand = Math.max(0, (v - 0.56) / 0.44);
       const rightBand = smoothstep(0.38, 1, u);
       const leftBand = 1 - smoothstep(0, 0.35, u);
@@ -1527,31 +1572,36 @@ function updateCloth(delta, elapsed) {
       const fineRipple = Math.sin(elapsed * 4.8 + u * 12.5 + v * 6.1 + phase[i]) * 0.075 * rippleScale;
       const broadRipple = Math.sin(elapsed * 2.0 + u * 4.8 - v * 3.8) * 0.12 * rippleScale;
       const bottomCurl = lowerBand * lowerBand * Math.sin(elapsed * 3.4 + u * 10.0) * 0.26 * rippleScale;
-      const fanDistance = Math.hypot((original[p] - fanLocal.x) * 0.38, (original[p + 1] - fanLocal.y) * 0.72);
-      const fanInfluence = smoothstep(5.8, 0.3, fanDistance);
+      const fromFanX = original[p] - fanLocal.x;
+      const fromFanY = original[p + 1] - fanLocal.y;
+      const fromFanZ = original[p + 2] - fanLocal.z;
+      const fanDistance = Math.hypot(fromFanX * 0.36, fromFanY * 0.55, fromFanZ * 0.72);
+      const fanInfluence = 0.44 + smoothstep(7.4, 0.3, fanDistance) * 0.86;
       const fanPower = params.fanEnabled ? params.wind : 0;
-      const wind = fanPower * pulse * (0.48 + fanInfluence * 0.92) * THREE.MathUtils.lerp(1, 0.36, clarity);
+      const wind = fanPower * pulse * fanInfluence * THREE.MathUtils.lerp(1.28, 0.62, clarity);
+      const fanVectorLength = Math.max(0.7, Math.hypot(fromFanX, fromFanY * 0.7, fromFanZ));
+      const fanVectorX = fromFanX / fanVectorLength;
+      const fanVectorZ = (Math.sign(fromFanZ) || (fanLocal.z < 0 ? 1 : -1)) * (0.78 + Math.min(Math.abs(fromFanZ) * 0.12, 0.34));
 
       const targetX =
         original[p] +
-        windX * wind * verticalBand * (0.16 + rightBand * 0.5) -
-        windX * wind * leftBand * lowerBand * 0.18 +
-        broadRipple * wind * verticalBand * 0.18;
+        (windX * 0.36 + fanVectorX * 0.82) * wind * freeBand * (0.32 + rightBand * 0.26) -
+        windX * wind * leftBand * lowerBand * 0.12 +
+        broadRipple * wind * freeBand * 0.24;
       const targetY =
         original[p + 1] -
-        THREE.MathUtils.lerp(0.14, 0.06, clarity) * v * v +
-        lowerBand * wind * 0.28 +
-        Math.sin(elapsed * 2.9 + u * 7.2) * verticalBand * wind * 0.06;
+        THREE.MathUtils.lerp(0.1, 0.04, clarity) * v * v +
+        freeBand * wind * (0.12 + lowerBand * 0.5) +
+        Math.sin(elapsed * 2.9 + u * 7.2) * freeBand * wind * 0.1;
       const targetZ =
         original[p + 2] +
-        wind * windDepth * verticalBand * (0.52 + rightBand * 0.78) +
-        lowerBand * wind * 0.34 +
-        fineRipple * wind +
-        bottomCurl * wind;
+        fanVectorZ * wind * freeBand * (0.9 + lowerBand * 0.82) +
+        fineRipple * wind * 1.18 +
+        bottomCurl * wind * 1.22;
 
       positions[p] = px + vx * 0.82 + (targetX - px) * 0.058;
       positions[p + 1] = py + vy * 0.82 + (targetY - py) * 0.058 + clothConfig.gravity * dt;
-      positions[p + 2] = pz + vz * 0.82 + (targetZ - pz) * THREE.MathUtils.lerp(0.065, 0.038, clarity);
+      positions[p + 2] = pz + vz * 0.82 + (targetZ - pz) * THREE.MathUtils.lerp(0.082, 0.052, clarity);
 
       if (params.pull && cloth.hovered > -1) {
         const hi = cloth.hovered * 3;
@@ -1598,7 +1648,7 @@ function updateCloth(delta, elapsed) {
       previous[p + 1] = -4.35;
     }
     positions[p] = THREE.MathUtils.clamp(positions[p], -5.0, 5.0);
-    positions[p + 2] = THREE.MathUtils.clamp(positions[p + 2], -1.1, 5.2);
+    positions[p + 2] = THREE.MathUtils.clamp(positions[p + 2], -3.6, 6.8);
   }
 
   cloth.geometry.attributes.position.needsUpdate = true;
@@ -1749,32 +1799,74 @@ function applyCinemaLight() {
   const range = params.lightRange;
   const boat = cinemaSet.userData.boat;
   const beam = cinemaSet.userData.beam;
+  const beamSheet = cinemaSet.userData.beamSheet;
+  const beamLines = cinemaSet.userData.beamLines;
   const enabled = params.night && params.boatLight;
 
   boat.userData.lightAnchor.getWorldPosition(boatLightSource);
-  boatLightTarget.set(Math.sin(angle) * 1.65, -0.42, 0.1);
+  boatLightTarget.set(-1.65 + Math.sin(angle) * 1.3, -0.78 + (params.lightSize - 1) * 0.08, 0.18);
 
   lights.projectorTarget.position.copy(boatLightTarget);
   lights.projectorSpot.position.copy(boatLightSource);
   lights.projectorSpot.distance = range + 1.8;
-  lights.projectorSpot.angle = THREE.MathUtils.clamp(0.14 + params.lightSize * 0.09, 0.18, 0.34);
-  lights.projectorSpot.penumbra = 0.92;
+  lights.projectorSpot.angle = THREE.MathUtils.clamp(0.1 + params.lightSize * 0.11, 0.16, 0.32);
+  lights.projectorSpot.penumbra = 0.96;
   lights.projectorSpot.intensity = enabled ? params.lightStrength * 0.34 : 0;
   lights.projectorSpot.color.set(0xffd9a4);
   lights.boatPoint.position.copy(boatLightSource);
-  lights.boatPoint.intensity = enabled ? 0.55 + params.lightStrength * 0.28 : 0;
+  lights.boatPoint.intensity = enabled ? 0.42 + params.lightStrength * 0.22 : 0;
 
   boatLightDirection.copy(boatLightTarget).sub(boatLightSource);
+  const beamLength = boatLightDirection.length();
   beam.visible = enabled;
   beam.position.copy(boatLightSource).addScaledVector(boatLightDirection, 0.5);
-  beam.scale.set(params.lightSize * 0.42, boatLightDirection.length(), params.lightSize * 0.42);
-  beam.quaternion.setFromUnitVectors(boatLightAxis, boatLightDirection.normalize());
-  beam.material.opacity = enabled ? THREE.MathUtils.clamp(params.lightStrength * 0.036, 0.018, 0.12) : 0;
+  beam.scale.set(params.lightSize * 0.58, beamLength, params.lightSize * 0.58);
+  beam.quaternion.setFromUnitVectors(boatLightAxis, boatLightDirection.normalize().negate());
+  beam.material.opacity = enabled ? THREE.MathUtils.clamp(params.lightStrength * 0.11, 0.08, 0.28) : 0;
+
+  const sheetRadius = THREE.MathUtils.clamp(0.58 + params.lightSize * 0.72, 0.58, 1.8);
+  const sheetPositions = beamSheet.geometry.attributes.position.array;
+  sheetPositions[0] = boatLightSource.x;
+  sheetPositions[1] = boatLightSource.y;
+  sheetPositions[2] = boatLightSource.z;
+  sheetPositions[3] = boatLightTarget.x - sheetRadius;
+  sheetPositions[4] = boatLightTarget.y - sheetRadius * 0.12;
+  sheetPositions[5] = boatLightTarget.z + 0.04;
+  sheetPositions[6] = boatLightTarget.x + sheetRadius;
+  sheetPositions[7] = boatLightTarget.y + sheetRadius * 0.12;
+  sheetPositions[8] = boatLightTarget.z + 0.04;
+  beamSheet.geometry.attributes.position.needsUpdate = true;
+  beamSheet.geometry.computeVertexNormals();
+  beamSheet.visible = enabled;
+  beamSheet.material.opacity = enabled ? THREE.MathUtils.clamp(params.lightStrength * 0.07, 0.045, 0.18) : 0;
+
+  const linePositions = beamLines.geometry.attributes.position.array;
+  linePositions[0] = boatLightSource.x;
+  linePositions[1] = boatLightSource.y;
+  linePositions[2] = boatLightSource.z;
+  linePositions[3] = sheetPositions[3];
+  linePositions[4] = sheetPositions[4];
+  linePositions[5] = sheetPositions[5];
+  linePositions[6] = boatLightSource.x;
+  linePositions[7] = boatLightSource.y;
+  linePositions[8] = boatLightSource.z;
+  linePositions[9] = sheetPositions[6];
+  linePositions[10] = sheetPositions[7];
+  linePositions[11] = sheetPositions[8];
+  linePositions[12] = sheetPositions[3];
+  linePositions[13] = sheetPositions[4];
+  linePositions[14] = sheetPositions[5];
+  linePositions[15] = sheetPositions[6];
+  linePositions[16] = sheetPositions[7];
+  linePositions[17] = sheetPositions[8];
+  beamLines.geometry.attributes.position.needsUpdate = true;
+  beamLines.visible = enabled;
+  beamLines.material.opacity = enabled ? THREE.MathUtils.clamp(params.lightStrength * 0.12, 0.08, 0.24) : 0;
 
   screenGlow.visible = enabled;
-  screenGlow.position.set(boatLightTarget.x, boatLightTarget.y, 0.13);
-  screenGlow.scale.setScalar(THREE.MathUtils.clamp(0.72 + params.lightSize * 0.58, 0.72, 1.95));
-  screenGlow.material.opacity = enabled ? THREE.MathUtils.clamp(params.lightStrength * 0.045, 0.025, 0.12) : 0;
+  screenGlow.position.set(boatLightTarget.x, boatLightTarget.y, 0.16);
+  screenGlow.scale.setScalar(THREE.MathUtils.clamp(1.0 + params.lightSize * 0.95, 1.0, 2.8));
+  screenGlow.material.opacity = enabled ? THREE.MathUtils.clamp(params.lightStrength * 0.14, 0.08, 0.34) : 0;
 }
 
 function updateCinemaSet(delta, elapsed) {
