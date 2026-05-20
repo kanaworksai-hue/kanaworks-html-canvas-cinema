@@ -1161,7 +1161,7 @@ function createCinemaSet() {
   const group = new THREE.Group();
   group.visible = false;
 
-  const oceanGeometry = new THREE.PlaneGeometry(46, 28, 96, 48);
+  const oceanGeometry = new THREE.PlaneGeometry(46, 28, 112, 64);
   const oceanBase = new Float32Array(oceanGeometry.attributes.position.array);
   const oceanPhases = createOceanVertexPhases(oceanGeometry.attributes.position.count);
   const oceanMaterial = createOceanMaterial();
@@ -1211,16 +1211,56 @@ function seededUnit(seed, salt) {
   return value - Math.floor(value);
 }
 
+function oceanHash2(x, y) {
+  const value = Math.sin(x * 127.1 + y * 311.7) * 43758.5453123;
+  return value - Math.floor(value);
+}
+
+function oceanNoise2(x, y) {
+  const ix = Math.floor(x);
+  const iy = Math.floor(y);
+  const fx = x - ix;
+  const fy = y - iy;
+  const ux = fx * fx * (3 - 2 * fx);
+  const uy = fy * fy * (3 - 2 * fy);
+  const a = oceanHash2(ix, iy);
+  const b = oceanHash2(ix + 1, iy);
+  const c = oceanHash2(ix, iy + 1);
+  const d = oceanHash2(ix + 1, iy + 1);
+  return THREE.MathUtils.lerp(THREE.MathUtils.lerp(a, b, ux), THREE.MathUtils.lerp(c, d, ux), uy);
+}
+
+function rotateOceanPoint(x, y, angle) {
+  const cos = Math.cos(angle);
+  const sin = Math.sin(angle);
+  return [x * cos - y * sin, x * sin + y * cos];
+}
+
+function seaOctaveHeight(x, y, choppy, elapsed, phase) {
+  const noiseA = oceanNoise2(x * 0.76 + elapsed * 0.035 + phase * 0.11, y * 0.76 - elapsed * 0.024);
+  const noiseB = oceanNoise2(y * 0.88 - phase * 0.07, x * 0.88 + elapsed * 0.042);
+  const qx = x + (noiseA - 0.5) * 1.16;
+  const qy = y + (noiseB - 0.5) * 1.16;
+  const waveX = 1 - Math.abs(Math.sin(qx));
+  const waveY = 1 - Math.abs(Math.sin(qy));
+  const swellX = Math.abs(Math.cos(qx));
+  const swellY = Math.abs(Math.cos(qy));
+  const blendX = THREE.MathUtils.lerp(waveX, swellX, waveX);
+  const blendY = THREE.MathUtils.lerp(waveY, swellY, waveY);
+  const ridge = 1 - Math.pow(THREE.MathUtils.clamp(blendX * blendY, 0, 1), 0.65);
+  return Math.pow(THREE.MathUtils.clamp(ridge, 0, 1), choppy);
+}
+
 function createOceanMaterial() {
   return new THREE.ShaderMaterial({
     uniforms: {
       uTime: { value: 0 },
-      uDeep: { value: new THREE.Color(0x043556) },
-      uMid: { value: new THREE.Color(0x147196) },
-      uShallow: { value: new THREE.Color(0x47d5d0) },
+      uDeep: { value: new THREE.Color(0x041d34) },
+      uMid: { value: new THREE.Color(0x0b6888) },
+      uShallow: { value: new THREE.Color(0x39d7d0) },
       uFoam: { value: new THREE.Color(0xf1fbff) },
-      uReflectLow: { value: new THREE.Color(0x071321) },
-      uReflectHigh: { value: new THREE.Color(0x8eb7ff) },
+      uReflectLow: { value: new THREE.Color(0x07111f) },
+      uReflectHigh: { value: new THREE.Color(0xaec7f2) },
       uMoonTint: { value: new THREE.Color(0xfff2c0) },
       uCameraPosition: { value: new THREE.Vector3() },
       uMoonPosition: { value: new THREE.Vector3(5.7, 5.25, -6.8) },
@@ -1256,6 +1296,8 @@ function createOceanMaterial() {
       varying vec3 vWorldPosition;
       varying vec3 vWorldNormal;
 
+      const mat2 SEA_OCTAVE_MATRIX = mat2(1.6, 1.2, -1.2, 1.6);
+
       float hash(vec2 p) {
         return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
       }
@@ -1271,60 +1313,80 @@ function createOceanMaterial() {
         );
       }
 
-      float waveBand(vec2 uv, float scale, float speed, float bend) {
-        float drift = sin(uv.x * bend + uTime * speed) * 0.018;
-        float line = sin((uv.y + drift) * scale + sin(uv.x * 12.0) * 0.7 - uTime * speed);
-        return smoothstep(0.9, 1.0, line * 0.5 + 0.5);
+      float seaOctave(vec2 uv, float choppy) {
+        uv += noise(uv) * 0.58;
+        vec2 wave = 1.0 - abs(sin(uv));
+        vec2 swell = abs(cos(uv));
+        wave = mix(wave, swell, wave);
+        float ridge = 1.0 - pow(clamp(wave.x * wave.y, 0.0, 1.0), 0.65);
+        return pow(clamp(ridge, 0.0, 1.0), choppy);
       }
 
-      float softSparkle(vec2 uv, float scale, float speed) {
-        vec2 flow = vec2(uTime * speed, -uTime * speed * 0.42);
-        float large = noise(uv * scale + flow);
-        float fine = noise(uv * scale * 2.35 - flow * 0.72);
-        float mask = smoothstep(0.68, 0.96, large) * smoothstep(0.56, 0.94, fine);
-        return mask;
+      float seaDetailHeight(vec2 p) {
+        float frequency = 0.64;
+        float amplitude = 0.58;
+        float choppy = 3.85;
+        float height = 0.0;
+        vec2 uv = p;
+
+        for (int i = 0; i < 5; i++) {
+          float fi = float(i);
+          float time = uTime * (0.34 + fi * 0.08);
+          float waveA = seaOctave((uv + vec2(time, -time * 0.78)) * frequency, choppy);
+          float waveB = seaOctave((uv - vec2(time * 0.58, -time * 0.92)) * frequency * 1.17, choppy * 0.86);
+          height += (waveA * 0.62 + waveB * 0.38 - 0.5) * amplitude;
+          uv = SEA_OCTAVE_MATRIX * uv;
+          frequency *= 1.65;
+          amplitude *= 0.42;
+          choppy = mix(choppy, 1.32, 0.24);
+        }
+
+        return height;
+      }
+
+      vec3 seaDetailNormal(vec2 p) {
+        float eps = 0.045;
+        float center = seaDetailHeight(p);
+        float right = seaDetailHeight(p + vec2(eps, 0.0));
+        float front = seaDetailHeight(p + vec2(0.0, eps));
+        return normalize(vec3((center - right) * 1.9, eps * 2.2, (center - front) * 1.9));
       }
 
       void main() {
-        float depth = smoothstep(0.12, 0.88, vUv.y);
-        vec3 color = mix(uShallow, uMid, depth);
-        color = mix(color, uDeep, smoothstep(0.58, 1.0, depth) * 0.55);
-
-        float largeFoam = waveBand(vUv, 23.0, 0.82, 5.0) * 0.16;
-        float fineFoam = waveBand(vUv + vec2(0.13, 0.08), 54.0, 1.3, 9.0) * 0.08;
-        float crest = smoothstep(0.035, 0.19, vWave);
-        float trough = smoothstep(0.08, -0.16, vWave) * 0.08;
-        float foam = clamp((largeFoam + fineFoam) * (0.12 + crest * 0.48) + trough, 0.0, 0.24);
-
-        vec2 worldUv = vWorldPosition.xz * 0.055;
-        float shimmerBase = noise(worldUv * 5.8 + vec2(uTime * 0.05, -uTime * 0.03));
-        float sparkleA = softSparkle(worldUv + vec2(0.05, -0.08), 18.0, 0.09);
-        float sparkleB = softSparkle(worldUv * 1.8 + vec2(-0.16, 0.11), 28.0, 0.13) * 0.44;
-        float glint = clamp((sparkleA + sparkleB) * (0.06 + crest * 0.2), 0.0, 0.22);
-
+        vec2 worldUv = vWorldPosition.xz * 0.2;
         vec3 normalDir = normalize(vWorldNormal);
+        vec3 detailNormal = seaDetailNormal(worldUv + vec2(uTime * 0.018, -uTime * 0.012));
+        normalDir = normalize(mix(normalDir, detailNormal, 0.42));
+
+        float depth = smoothstep(0.08, 0.9, vUv.y);
+        vec3 color = mix(uShallow, uMid, depth);
+        color = mix(color, uDeep, smoothstep(0.42, 1.0, depth) * 0.62);
+
         vec3 viewDir = normalize(uCameraPosition - vWorldPosition);
         vec3 reflectedDir = reflect(-viewDir, normalDir);
-        float fresnel = pow(1.0 - clamp(dot(normalDir, viewDir), 0.0, 1.0), 3.0);
-        fresnel = clamp(0.08 + fresnel * 0.82, 0.0, 0.9);
+        float fresnel = pow(1.0 - clamp(dot(normalDir, viewDir), 0.0, 1.0), 3.2);
+        fresnel = clamp(0.07 + fresnel * 0.9, 0.0, 0.94);
 
         vec3 skyReflection = mix(uReflectLow, uReflectHigh, smoothstep(-0.06, 0.82, reflectedDir.y));
         float normalBend = length(normalDir.xz);
-        float refractNoise = noise(worldUv * 13.5 + normalDir.xz * 4.8 + vec2(uTime * 0.08, -uTime * 0.05));
-        vec3 refractedColor = mix(uShallow, uMid, clamp(depth + normalBend * 0.38 + (refractNoise - 0.5) * 0.18, 0.0, 1.0));
-        color = mix(color, refractedColor, 0.18 + (1.0 - fresnel) * 0.24);
+        float bodyNoise = noise(worldUv * 3.2 + vec2(uTime * 0.026, -uTime * 0.018));
+        float refractNoise = noise(worldUv * 12.0 + normalDir.xz * 4.2 + vec2(uTime * 0.06, -uTime * 0.045));
+        vec3 refractedColor = mix(uShallow, uMid, clamp(depth + normalBend * 0.42 + (refractNoise - 0.5) * 0.2, 0.0, 1.0));
+        color = mix(color, refractedColor, 0.22 + (1.0 - fresnel) * 0.28);
 
         vec3 moonDir = normalize(uMoonPosition - vWorldPosition);
-        float moonSpec = pow(max(dot(reflectedDir, moonDir), 0.0), 48.0) * (0.22 + crest * 0.78);
-        float moonPath = smoothstep(1.8, -0.2, abs(vWorldPosition.x - 2.8 - sin(vWorldPosition.z * 0.9 + uTime * 0.35) * 0.42));
-        moonSpec += moonPath * fresnel * smoothstep(-1.0, 5.0, vWorldPosition.z) * 0.08;
+        float crest = smoothstep(0.05, 0.34, vWave + seaDetailHeight(worldUv * 0.92) * 0.16);
+        float brokenFoam = seaOctave(worldUv * 6.4 + vec2(uTime * 0.12, -uTime * 0.08), 1.55);
+        float foam = smoothstep(0.74, 0.98, brokenFoam) * crest * 0.34;
+        float glint = pow(max(dot(reflectedDir, moonDir), 0.0), 72.0) * (0.24 + crest * 0.76);
+        float fleck = pow(noise(worldUv * 20.0 + normalDir.xz * 5.5 + uTime * 0.08), 7.0) * 0.08;
 
-        color += (shimmerBase - 0.5) * vec3(0.035, 0.1, 0.12) * (1.0 - depth * 0.45);
-        color += glint * vec3(0.14, 0.32, 0.36);
-        color = mix(color, skyReflection, fresnel * 0.42);
-        color += uMoonTint * moonSpec * 0.34;
-        color = mix(color, uFoam, foam * 0.36);
-        color += crest * vec3(0.055, 0.13, 0.15) + normalBend * vec3(0.015, 0.04, 0.045);
+        color += (bodyNoise - 0.5) * vec3(0.035, 0.1, 0.12) * (1.0 - depth * 0.45);
+        color = mix(color, skyReflection, fresnel * 0.5);
+        color += uMoonTint * glint * 0.42;
+        color += vec3(0.12, 0.36, 0.34) * fleck * (0.6 + normalBend);
+        color = mix(color, uFoam, foam * 0.28);
+        color += crest * vec3(0.035, 0.12, 0.13) + normalBend * vec3(0.018, 0.052, 0.06);
 
         gl_FragColor = vec4(color, 1.0);
       }
@@ -1382,11 +1444,40 @@ function createWoodenCrate() {
 }
 
 function getOceanWaveHeight(x, y, elapsed, phaseA = 0, phaseB = 0, phaseC = 0, amplitude = 1) {
-  return (
-    Math.sin(elapsed * 0.74 + phaseA + x * 0.24 + y * 0.1) * 0.16 +
-    Math.sin(elapsed * 1.03 + phaseB - x * 0.16 + y * 0.32) * 0.1 +
-    Math.sin(elapsed * 1.42 + phaseC + x * 0.54 - y * 0.08) * 0.045
-  ) * amplitude;
+  let uvX = x * 0.16 + phaseA * 0.035;
+  let uvY = y * 0.16 + phaseB * 0.035;
+  let frequency = 1;
+  let waveAmplitude = 0.58;
+  let choppy = 3.85;
+  let height = 0;
+
+  for (let i = 0; i < 5; i += 1) {
+    const speed = elapsed * (0.34 + i * 0.075) + phaseC * 0.13;
+    const waveA = seaOctaveHeight(
+      (uvX + speed) * frequency,
+      (uvY - speed * 0.78) * frequency,
+      choppy,
+      elapsed,
+      phaseA + i,
+    );
+    const waveB = seaOctaveHeight(
+      (uvX - speed * 0.58) * frequency * 1.17,
+      (uvY + speed * 0.92) * frequency,
+      choppy * 0.86,
+      elapsed,
+      phaseB + i * 1.7,
+    );
+    height += (waveA * 0.62 + waveB * 0.38 - 0.5) * waveAmplitude;
+
+    const rotated = rotateOceanPoint(uvX, uvY, 0.82);
+    uvX = rotated[0] * 1.65;
+    uvY = rotated[1] * 1.65;
+    frequency *= 1.65;
+    waveAmplitude *= 0.42;
+    choppy = THREE.MathUtils.lerp(choppy, 1.32, 0.24);
+  }
+
+  return height * amplitude * 0.88;
 }
 
 function addLights() {
