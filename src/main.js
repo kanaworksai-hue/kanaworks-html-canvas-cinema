@@ -334,8 +334,6 @@ const fanDragOffset = new THREE.Vector3();
 const localDragTarget = new THREE.Vector3();
 const boatLightSource = new THREE.Vector3();
 const boatLightTarget = new THREE.Vector3();
-const boatLightDirection = new THREE.Vector3();
-const boatLightAxis = new THREE.Vector3(0, 1, 0);
 const fanWindSource = new THREE.Vector3();
 const fanWindTarget = new THREE.Vector3();
 const fanWindDirection = new THREE.Vector3();
@@ -868,16 +866,19 @@ function createClip(x, y, z, scale = 1) {
 }
 
 function createGulls({ width, height }) {
+  const topEdge = height / 2 - 0.015;
   return [
-    createGull(-1, -width / 2 + 0.3, height / 2 - 0.04),
-    createGull(1, width / 2 - 0.3, height / 2 - 0.04),
+    createGull(1, -width / 2 + 0.75, topEdge),
+    createGull(-1, width / 2 - 0.75, topEdge),
   ];
 }
 
 function createGull(side, x, y) {
   const group = new THREE.Group();
   const inward = -side;
-  group.position.set(x, y, 0.28);
+  const beakTipX = side > 0 ? 0.075 : -0.075;
+  const beakTipY = 0.14;
+  group.position.set(x, y, 0.2);
   group.scale.setScalar(0.98);
   group.visible = false;
   group.userData.baseY = y;
@@ -891,24 +892,24 @@ function createGull(side, x, y) {
   const eyeMaterial = new THREE.MeshBasicMaterial({ color: 0x111827 });
 
   const body = new THREE.Mesh(new THREE.SphereGeometry(0.16, 20, 14), featherMaterial);
-  body.position.set(inward * 0.26, 0.16, 0.04);
+  body.position.set(inward * 0.26 - beakTipX, 0.16 - beakTipY, 0.04);
   body.scale.set(1.38, 0.72, 0.58);
   body.castShadow = true;
   group.add(body);
 
   const head = new THREE.Mesh(new THREE.SphereGeometry(0.09, 18, 12), featherMaterial);
-  head.position.set(inward * 0.1, 0.15, 0.06);
+  head.position.set(inward * 0.1 - beakTipX, 0.15 - beakTipY, 0.06);
   head.castShadow = true;
   group.add(head);
 
   const beak = new THREE.Mesh(new THREE.ConeGeometry(0.032, 0.18, 16), beakMaterial);
-  beak.position.set(inward * 0.015, 0.14, 0.06);
+  beak.position.set(inward * 0.015 - beakTipX, 0.14 - beakTipY, 0.06);
   beak.rotation.z = side < 0 ? Math.PI / 2 : -Math.PI / 2;
   beak.castShadow = true;
   group.add(beak);
 
   const eye = new THREE.Mesh(new THREE.SphereGeometry(0.012, 8, 8), eyeMaterial);
-  eye.position.set(inward * 0.065, 0.18, 0.13);
+  eye.position.set(inward * 0.065 - beakTipX, 0.18 - beakTipY, 0.13);
   group.add(eye);
 
   const wingShape = new THREE.Shape();
@@ -918,8 +919,8 @@ function createGull(side, x, y) {
   const wingGeometry = new THREE.ShapeGeometry(wingShape);
   const leftWing = new THREE.Mesh(wingGeometry, wingMaterial);
   const rightWing = new THREE.Mesh(wingGeometry, wingMaterial);
-  leftWing.position.set(inward * 0.22, 0.15, 0.02);
-  rightWing.position.set(inward * 0.22, 0.15, -0.02);
+  leftWing.position.set(inward * 0.22 - beakTipX, 0.15 - beakTipY, 0.02);
+  rightWing.position.set(inward * 0.22 - beakTipX, 0.15 - beakTipY, -0.02);
   leftWing.castShadow = true;
   rightWing.castShadow = true;
   group.add(leftWing, rightWing);
@@ -1173,42 +1174,7 @@ function createCinemaSet() {
   boat.userData.baseY = boat.position.y;
   group.add(boat);
 
-  const beamMaterial = new THREE.MeshBasicMaterial({
-    color: 0xffd99a,
-    transparent: true,
-    opacity: 0,
-    depthWrite: false,
-    depthTest: false,
-    side: THREE.DoubleSide,
-    blending: THREE.AdditiveBlending,
-  });
-  const beam = new THREE.Mesh(new THREE.ConeGeometry(1, 1, 48, 1, true), beamMaterial);
-  beam.visible = false;
-  beam.renderOrder = 3;
-  group.add(beam);
-
-  const beamSheetMaterial = beamMaterial.clone();
-  beamSheetMaterial.opacity = 0;
-  const beamSheetGeometry = new THREE.BufferGeometry();
-  beamSheetGeometry.setAttribute("position", new THREE.BufferAttribute(new Float32Array(9), 3));
-  const beamSheet = new THREE.Mesh(beamSheetGeometry, beamSheetMaterial);
-  beamSheet.visible = false;
-  beamSheet.renderOrder = 5;
-  group.add(beamSheet);
-
-  const beamLinesGeometry = new THREE.BufferGeometry();
-  beamLinesGeometry.setAttribute("position", new THREE.BufferAttribute(new Float32Array(18), 3));
-  const beamLinesMaterial = new THREE.LineBasicMaterial({
-    color: 0x171b24,
-    transparent: true,
-    opacity: 0,
-    depthTest: false,
-  });
-  const beamLines = new THREE.LineSegments(beamLinesGeometry, beamLinesMaterial);
-  beamLines.visible = false;
-  beamLines.renderOrder = 6;
-  group.add(beamLines);
-  group.userData = { ocean, oceanBase, oceanPhases, boat, beam, beamSheet, beamLines };
+  group.userData = { ocean, oceanBase, oceanPhases, boat };
 
   return group;
 }
@@ -1861,9 +1827,6 @@ function applyCinemaLight() {
   const angle = THREE.MathUtils.degToRad(params.lightDirection);
   const range = params.lightRange;
   const boat = cinemaSet.userData.boat;
-  const beam = cinemaSet.userData.beam;
-  const beamSheet = cinemaSet.userData.beamSheet;
-  const beamLines = cinemaSet.userData.beamLines;
   const enabled = params.night && params.boatLight;
 
   boat.userData.lightAnchor.getWorldPosition(boatLightSource);
@@ -1878,53 +1841,6 @@ function applyCinemaLight() {
   lights.projectorSpot.color.set(0xffd9a4);
   lights.boatPoint.position.copy(boatLightSource);
   lights.boatPoint.intensity = enabled ? 0.42 + params.lightStrength * 0.22 : 0;
-
-  boatLightDirection.copy(boatLightTarget).sub(boatLightSource);
-  const beamLength = boatLightDirection.length();
-  beam.visible = enabled;
-  beam.position.copy(boatLightSource).addScaledVector(boatLightDirection, 0.5);
-  beam.scale.set(params.lightSize * 0.58, beamLength, params.lightSize * 0.58);
-  beam.quaternion.setFromUnitVectors(boatLightAxis, boatLightDirection.normalize().negate());
-  beam.material.opacity = enabled ? THREE.MathUtils.clamp(params.lightStrength * 0.11, 0.08, 0.28) : 0;
-
-  const sheetRadius = THREE.MathUtils.clamp(0.58 + params.lightSize * 0.72, 0.58, 1.8);
-  const sheetPositions = beamSheet.geometry.attributes.position.array;
-  sheetPositions[0] = boatLightSource.x;
-  sheetPositions[1] = boatLightSource.y;
-  sheetPositions[2] = boatLightSource.z;
-  sheetPositions[3] = boatLightTarget.x - sheetRadius;
-  sheetPositions[4] = boatLightTarget.y - sheetRadius * 0.12;
-  sheetPositions[5] = boatLightTarget.z + 0.04;
-  sheetPositions[6] = boatLightTarget.x + sheetRadius;
-  sheetPositions[7] = boatLightTarget.y + sheetRadius * 0.12;
-  sheetPositions[8] = boatLightTarget.z + 0.04;
-  beamSheet.geometry.attributes.position.needsUpdate = true;
-  beamSheet.geometry.computeVertexNormals();
-  beamSheet.visible = enabled;
-  beamSheet.material.opacity = enabled ? THREE.MathUtils.clamp(params.lightStrength * 0.07, 0.045, 0.18) : 0;
-
-  const linePositions = beamLines.geometry.attributes.position.array;
-  linePositions[0] = boatLightSource.x;
-  linePositions[1] = boatLightSource.y;
-  linePositions[2] = boatLightSource.z;
-  linePositions[3] = sheetPositions[3];
-  linePositions[4] = sheetPositions[4];
-  linePositions[5] = sheetPositions[5];
-  linePositions[6] = boatLightSource.x;
-  linePositions[7] = boatLightSource.y;
-  linePositions[8] = boatLightSource.z;
-  linePositions[9] = sheetPositions[6];
-  linePositions[10] = sheetPositions[7];
-  linePositions[11] = sheetPositions[8];
-  linePositions[12] = sheetPositions[3];
-  linePositions[13] = sheetPositions[4];
-  linePositions[14] = sheetPositions[5];
-  linePositions[15] = sheetPositions[6];
-  linePositions[16] = sheetPositions[7];
-  linePositions[17] = sheetPositions[8];
-  beamLines.geometry.attributes.position.needsUpdate = true;
-  beamLines.visible = enabled;
-  beamLines.material.opacity = enabled ? THREE.MathUtils.clamp(params.lightStrength * 0.12, 0.08, 0.24) : 0;
 
   screenGlow.visible = enabled;
   screenGlow.position.set(boatLightTarget.x, boatLightTarget.y, 0.16);
@@ -1961,7 +1877,7 @@ function updateGulls(delta, elapsed) {
   gulls.forEach((gull, index) => {
     const side = gull.userData.wingSide;
     const wingFlap = Math.sin(elapsed * 5.4 + gull.userData.phase) * 0.46;
-    gull.position.y = gull.userData.baseY + Math.sin(elapsed * 1.25 + index) * 0.025;
+    gull.position.y = gull.userData.baseY;
     gull.rotation.z = Math.sin(elapsed * 1.1 + index * 0.7) * 0.035;
     gull.userData.leftWing.rotation.z = side * (0.1 + wingFlap);
     gull.userData.rightWing.rotation.z = side * (0.1 - wingFlap * 0.72);
