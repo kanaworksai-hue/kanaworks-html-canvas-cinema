@@ -329,9 +329,11 @@ scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
 const controls = new OrbitControls(camera, canvas);
 controls.enableDamping = true;
 controls.dampingFactor = 0.055;
+controls.enablePan = false;
 controls.minDistance = 6.3;
 controls.maxDistance = 15.5;
-controls.maxPolarAngle = Math.PI * 0.58;
+controls.minPolarAngle = Math.PI * 0.22;
+controls.maxPolarAngle = Math.PI * 0.48;
 controls.target.set(0, 0.15, 0);
 
 const clock = new THREE.Clock();
@@ -1128,7 +1130,10 @@ function createStars() {
     color: 0xfff8df,
     transparent: true,
     opacity: 0.98,
-    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+    fog: false,
+    side: THREE.DoubleSide,
+    toneMapped: false,
   });
   const moon = new THREE.Mesh(new THREE.CircleGeometry(0.88, 72), moonMaterial);
   moon.position.set(5.7, 5.25, -6.8);
@@ -1139,6 +1144,9 @@ function createStars() {
     transparent: true,
     opacity: 0.24,
     depthWrite: false,
+    fog: false,
+    side: THREE.DoubleSide,
+    toneMapped: false,
     blending: THREE.AdditiveBlending,
   });
   const moonHalo = new THREE.Mesh(new THREE.CircleGeometry(1.48, 72), moonHaloMaterial);
@@ -1153,29 +1161,27 @@ function createCinemaSet() {
   const group = new THREE.Group();
   group.visible = false;
 
-  const oceanGeometry = new THREE.PlaneGeometry(34, 18, 72, 34);
+  const oceanGeometry = new THREE.PlaneGeometry(46, 28, 96, 48);
   const oceanBase = new Float32Array(oceanGeometry.attributes.position.array);
   const oceanMaterial = new THREE.MeshPhysicalMaterial({
-    color: 0x123f63,
-    emissive: 0x061a2b,
-    emissiveIntensity: 0.18,
-    roughness: 0.32,
-    metalness: 0.08,
-    clearcoat: 0.36,
-    clearcoatRoughness: 0.32,
-    envMapIntensity: 0.72,
-    transparent: true,
-    opacity: 0.94,
-    side: THREE.DoubleSide,
+    color: 0x1c5a82,
+    emissive: 0x061b30,
+    emissiveIntensity: 0.2,
+    roughness: 0.42,
+    metalness: 0.02,
+    clearcoat: 0.32,
+    clearcoatRoughness: 0.38,
+    envMapIntensity: 0.52,
+    side: THREE.FrontSide,
   });
   const ocean = new THREE.Mesh(oceanGeometry, oceanMaterial);
   ocean.rotation.x = -Math.PI / 2;
-  ocean.position.set(0, -2.64, 3.0);
+  ocean.position.set(0, -2.84, 5.2);
   ocean.receiveShadow = true;
   group.add(ocean);
 
   const boat = createBoat();
-  boat.position.set(-2.18, -1.98, 2.8);
+  boat.position.set(-2.18, -2.44, 2.8);
   boat.scale.setScalar(1.08);
   boat.rotation.y = -0.18;
   boat.userData.baseY = boat.position.y;
@@ -1740,6 +1746,8 @@ function applyResponsiveLayout() {
     controls.target.set(0, THREE.MathUtils.lerp(-0.06, 0.08, media), 0.4);
     controls.minDistance = THREE.MathUtils.lerp(11, 12, media);
     controls.maxDistance = 24;
+    controls.minPolarAngle = Math.PI * 0.2;
+    controls.maxPolarAngle = Math.PI * 0.46;
     fanTransformControls.setSize(0.34);
   } else {
     clothRig.scale.setScalar(1);
@@ -1749,6 +1757,8 @@ function applyResponsiveLayout() {
     controls.target.set(0, 0.15, 0);
     controls.minDistance = 6.3;
     controls.maxDistance = 15.5;
+    controls.minPolarAngle = Math.PI * 0.2;
+    controls.maxPolarAngle = Math.PI * 0.48;
     fanTransformControls.setSize(0.7);
   }
   camera.updateProjectionMatrix();
@@ -1780,6 +1790,7 @@ function applyNightMode() {
 
   floor.material.color.set(params.night ? 0x101827 : 0xe9eef2);
   floor.material.roughness = params.night ? 1 : 0.92;
+  floor.visible = !params.night;
   softShadow.material.opacity = params.night ? 0 : 1;
 
   lights.hemi.intensity = params.night ? 0.32 : 1.9;
@@ -1813,9 +1824,9 @@ function updateCinemaSet(delta, elapsed) {
     const x = oceanBase[p];
     const y = oceanBase[p + 1];
     positions[p + 2] =
-      Math.sin(elapsed * 0.66 + x * 0.36 + y * 0.18) * 0.15 +
-      Math.sin(elapsed * 0.92 - x * 0.2 + y * 0.44) * 0.085 +
-      Math.sin(elapsed * 1.28 + x * 0.72 + y * 0.08) * 0.032;
+      Math.sin(elapsed * 0.72 + x * 0.28 + y * 0.16) * 0.11 +
+      Math.sin(elapsed * 0.54 - x * 0.16 + y * 0.32) * 0.06 +
+      Math.sin(elapsed * 1.16 + x * 0.54 + y * 0.1) * 0.024;
   }
   positionAttribute.needsUpdate = true;
   ocean.geometry.computeVertexNormals();
