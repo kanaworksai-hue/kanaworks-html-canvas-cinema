@@ -223,6 +223,71 @@ input {
   font-weight: 700;
 }
 
+.fan-move-pad {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 6;
+  display: grid;
+  gap: 7px;
+  width: 178px;
+  padding: 9px;
+  border: 1px solid rgba(28, 33, 40, 0.14);
+  border-radius: 8px;
+  color: #18202b;
+  background: rgba(246, 248, 249, 0.84);
+  box-shadow: 0 18px 54px rgba(31, 37, 45, 0.2);
+  opacity: 0;
+  pointer-events: none;
+  backdrop-filter: blur(18px);
+  transition:
+    opacity 160ms ease,
+    border-color 180ms ease,
+    background-color 180ms ease;
+}
+
+.fan-move-pad.is-visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.fan-pad-row {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr) 18px;
+  align-items: center;
+  gap: 6px;
+  min-height: 24px;
+  font-size: 15px;
+  font-weight: 900;
+}
+
+.fan-pad-row input {
+  width: 100%;
+  accent-color: #2567d4;
+}
+
+.fan-move-pad button {
+  min-height: 30px;
+  border: 0;
+  border-radius: 6px;
+  color: #fff;
+  background: #111827;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+body.is-night .fan-move-pad {
+  border-color: rgba(180, 202, 255, 0.18);
+  color: #eaf2ff;
+  background: rgba(13, 18, 31, 0.72);
+}
+
+body.is-night .fan-move-pad button {
+  color: #08111f;
+  background: #b8d8ff;
+}
+
 .creator-card {
   position: fixed;
   top: 18px;
@@ -457,6 +522,50 @@ html[lang="ja"] h1 {
   line-height: 1.55;
 }
 
+.guide-steps {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 22px;
+  width: 960px;
+  margin: 78px auto 0;
+  padding: 0;
+  list-style: none;
+}
+
+.guide-steps li,
+.instruction-card {
+  border: 1px solid rgba(20, 24, 30, 0.12);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.58);
+  box-shadow: 0 18px 42px rgba(26, 42, 66, 0.08);
+}
+
+.guide-steps li {
+  display: grid;
+  gap: 18px;
+  min-height: 172px;
+  padding: 26px;
+}
+
+.guide-steps strong {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  color: #fff;
+  background: #111827;
+  font-size: 24px;
+}
+
+.guide-steps span {
+  color: #3f4651;
+  font-size: 20px;
+  line-height: 1.45;
+  font-weight: 700;
+}
+
 .performance-copy {
   width: 760px;
   margin: 120px auto 0;
@@ -529,6 +638,22 @@ pre {
   line-height: 1.5;
 }
 
+.instruction-card {
+  display: grid;
+  gap: 18px;
+  padding: 34px;
+}
+
+.instruction-card span {
+  display: block;
+  padding-left: 24px;
+  border-left: 4px solid #2f7de1;
+  color: #394352;
+  font-size: 22px;
+  line-height: 1.42;
+  font-weight: 800;
+}
+
 .link-list {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -594,6 +719,29 @@ pre {
   body.is-night .mobile-upload-button {
     color: #08111f;
     background: #b8d8ff;
+  }
+
+  .fan-move-pad {
+    width: 152px;
+    gap: 5px;
+    padding: 7px;
+    border-radius: 8px;
+  }
+
+  .fan-pad-row {
+    grid-template-columns: 16px minmax(0, 1fr) 16px;
+    gap: 5px;
+    font-size: 13px;
+  }
+
+  .fan-move-pad button {
+    min-height: 28px;
+    font-size: 11px;
+  }
+
+  body.mobile-controls-open .fan-move-pad {
+    opacity: 0;
+    pointer-events: none;
   }
 
   body.mobile-controls-open .media-row {

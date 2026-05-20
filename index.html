@@ -121,6 +121,25 @@
         </div>
       </section>
 
+      <div id="fan-move-pad" class="fan-move-pad" aria-label="Fan movement controls">
+        <label class="fan-pad-row" aria-label="Move fan left and right">
+          <span aria-hidden="true">←</span>
+          <input id="fan-x-slider" type="range" min="-5.6" max="5.8" value="4.95" step="0.01" />
+          <span aria-hidden="true">→</span>
+        </label>
+        <label class="fan-pad-row" aria-label="Move fan down and up">
+          <span aria-hidden="true">↓</span>
+          <input id="fan-y-slider" type="range" min="-2.15" max="2.4" value="-1.28" step="0.01" />
+          <span aria-hidden="true">↑</span>
+        </label>
+        <label class="fan-pad-row" aria-label="Move fan back and forward">
+          <span aria-hidden="true">↙</span>
+          <input id="fan-z-slider" type="range" min="0.2" max="3.4" value="1.62" step="0.01" />
+          <span aria-hidden="true">↗</span>
+        </label>
+        <button id="reset-fan" type="button" data-i18n="ui.resetFan">Reset fan</button>
+      </div>
+
       <aside class="creator-card" aria-label="KanaWorks_AI">
         <img src="assets/kanaworks-ai-logo.jpg" alt="KanaWorks_AI logo" />
         <div>
@@ -139,63 +158,57 @@
           <header class="source-nav">
             <strong class="source-brand">
               <img src="assets/kanaworks-ai-logo.jpg" alt="" />
-              <span data-i18n="source.brand">HTML in Canvas</span>
+              <span data-i18n="source.brand">Canvas Cinema Guide</span>
             </strong>
             <nav>
-              <span data-i18n="source.nav.overview">Overview</span>
-              <span data-i18n="source.nav.performance">Performance</span>
-              <span data-i18n="source.nav.docs">Documentation</span>
+              <span data-i18n="source.nav.overview">Start</span>
+              <span data-i18n="source.nav.performance">Fan</span>
+              <span data-i18n="source.nav.docs">Night</span>
             </nav>
           </header>
 
           <div class="site-content" id="site-content">
             <section class="page-view view-home is-visible">
               <div class="hero-grid">
-                <p class="eyebrow" data-i18n="home.eyebrow">WICG experiment</p>
-                <h1 data-i18n="home.title">HTML in Canvas.</h1>
-                <p class="lead" data-i18n="home.lead">Experience true, artifact-free DOM rendering directly inside your WebGL scenes. Zero hacks. Uncompromising performance.</p>
-                <button type="button" data-i18n="home.button">View Proposal</button>
+                <p class="eyebrow" data-i18n="home.eyebrow">Start here</p>
+                <h1 data-i18n="home.title">How to use</h1>
+                <p class="lead" data-i18n="home.lead">Upload an image or video, place the fan, then drag the curtain to watch the screen become a physical cinema surface.</p>
               </div>
-              <div class="feature-band">
-                <div>
-                  <h2 data-i18n="home.featureA.title">Seamless Integration</h2>
-                  <p data-i18n="home.featureA.body">Native layout, CSS painting, and browser accessibility become a texture you can bend, light, and compose in 3D.</p>
-                </div>
-                <div>
-                  <h2 data-i18n="home.featureB.title">Real-time Interaction</h2>
-                  <p data-i18n="home.featureB.body">Pointer, wheel, and responsive layout state can be projected into your spatial interface without leaving the DOM model.</p>
-                </div>
-              </div>
+              <ol class="guide-steps">
+                <li><strong>1</strong><span data-i18n="home.stepA">Tap Upload Media to place your own image or video on the curtain.</span></li>
+                <li><strong>2</strong><span data-i18n="home.stepB">Use the fan controls to change wind, position, and direction.</span></li>
+                <li><strong>3</strong><span data-i18n="home.stepC">Drag the curtain with the mouse or touch to bend the screen by hand.</span></li>
+              </ol>
             </section>
 
             <section class="page-view view-performance">
               <div class="performance-copy">
-                <p class="eyebrow" data-i18n="performance.eyebrow">Frame budget</p>
-                <h1 data-i18n="performance.title">Designed for Performance.</h1>
-                <p class="lead" data-i18n="performance.lead">Built to run at 60FPS. The layout pass only runs when browser state changes, keeping your shader work free for atmosphere.</p>
+                <p class="eyebrow" data-i18n="performance.eyebrow">Fan control</p>
+                <h1 data-i18n="performance.title">Move the wind</h1>
+                <p class="lead" data-i18n="performance.lead">The fan can move left and right, up and down, or forward and backward. Reset brings it back to the default cinema position.</p>
               </div>
               <div class="metric-grid">
                 <div>
-                  <strong>0.8ms</strong>
-                  <span data-i18n="performance.metricA">DOM paint capture</span>
+                  <strong>← →</strong>
+                  <span data-i18n="performance.metricA">Move across the curtain</span>
                 </div>
                 <div>
-                  <strong>64 x 42</strong>
-                  <span data-i18n="performance.metricB">cloth vertices</span>
+                  <strong>↓ ↑</strong>
+                  <span data-i18n="performance.metricB">Raise or lower the fan</span>
                 </div>
                 <div>
-                  <strong>5x</strong>
-                  <span data-i18n="performance.metricC">constraint passes</span>
+                  <strong>↙ ↗</strong>
+                  <span data-i18n="performance.metricC">Push it back or forward</span>
                 </div>
               </div>
               <div class="feature-band">
                 <div>
-                  <h2 data-i18n="performance.featureA.title">Native Quality</h2>
-                  <p data-i18n="performance.featureA.body">Because the page is still HTML, typography remains crisp before it is sampled into a physical surface.</p>
+                  <h2 data-i18n="performance.featureA.title">Arrow sliders</h2>
+                  <p data-i18n="performance.featureA.body">The small controller attached to the fan gives fast movement without opening the full control panel.</p>
                 </div>
                 <div>
-                  <h2 data-i18n="performance.featureB.title">GPU Friendly</h2>
-                  <p data-i18n="performance.featureB.body">After capture, the page becomes an ordinary texture that can use reflections, normals, shadows, and post effects.</p>
+                  <h2 data-i18n="performance.featureB.title">Reset position</h2>
+                  <p data-i18n="performance.featureB.body">Use Reset fan if the fan moves out of view or you want to return to the balanced starting point.</p>
                 </div>
               </div>
             </section>
@@ -203,19 +216,21 @@
             <section class="page-view view-docs">
               <div class="docs-grid">
                 <div>
-                  <p class="eyebrow" data-i18n="docs.eyebrow">Draft API</p>
-                  <h1 data-i18n="docs.title">DOM nodes as pixels.</h1>
-                  <p class="lead" data-i18n="docs.lead">A canvas texture can represent a living section of the document, carrying browser layout into physically based rendering.</p>
+                  <p class="eyebrow" data-i18n="docs.eyebrow">Night cinema</p>
+                  <h1 data-i18n="docs.title">Open-air screen</h1>
+                  <p class="lead" data-i18n="docs.lead">Turn on Night cinema for a romantic star field, then adjust light direction, size, strength, range, and star glow.</p>
                 </div>
-                <pre><code>const surface = new HTMLCanvasElement();
-surface.attach(document.querySelector(".page"));
-material.map = new CanvasTexture(surface);</code></pre>
+                <div class="instruction-card">
+                  <span data-i18n="docs.cardA">Wheel zooms only the camera view.</span>
+                  <span data-i18n="docs.cardB">Content scroll moves only the instruction page.</span>
+                  <span data-i18n="docs.cardC">Upload again any time to replace the curtain texture.</span>
+                </div>
               </div>
               <div class="link-list">
-                <span data-i18n="docs.linkA">Paint lifecycle</span>
-                <span data-i18n="docs.linkB">Pointer projection</span>
-                <span data-i18n="docs.linkC">Accessibility</span>
-                <span data-i18n="docs.linkD">GPU upload path</span>
+                <span data-i18n="docs.linkA">Upload media</span>
+                <span data-i18n="docs.linkB">Move the fan</span>
+                <span data-i18n="docs.linkC">Drag curtain</span>
+                <span data-i18n="docs.linkD">Adjust lights</span>
               </div>
             </section>
           </div>

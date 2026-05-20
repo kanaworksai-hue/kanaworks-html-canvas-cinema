@@ -20,7 +20,12 @@ const autoplayInput = document.querySelector("#autoplay");
 const fanXInput = document.querySelector("#fan-x");
 const fanYInput = document.querySelector("#fan-y");
 const fanZInput = document.querySelector("#fan-z");
+const fanXSlider = document.querySelector("#fan-x-slider");
+const fanYSlider = document.querySelector("#fan-y-slider");
+const fanZSlider = document.querySelector("#fan-z-slider");
 const fanDirectionInput = document.querySelector("#fan-direction");
+const fanMovePad = document.querySelector("#fan-move-pad");
+const resetFanButton = document.querySelector("#reset-fan");
 const lightDirectionInput = document.querySelector("#light-direction");
 const lightSizeInput = document.querySelector("#light-size");
 const lightStrengthInput = document.querySelector("#light-strength");
@@ -31,15 +36,23 @@ const uploadButton = document.querySelector("#upload-button");
 const resetTextureButton = document.querySelector("#reset-texture");
 const modeButtons = [...document.querySelectorAll(".mode-button")];
 const langButtons = [...document.querySelectorAll(".lang-button")];
+const fanPositionInputs = [fanXInput, fanYInput, fanZInput, fanXSlider, fanYSlider, fanZSlider];
+
+const fanDefaults = {
+  x: 4.95,
+  y: -1.28,
+  z: 1.62,
+};
 
 const translations = {
   en: {
     "ui.title": "HTML in Canvas",
-    "ui.hero": "Hero",
-    "ui.performance": "Performance",
-    "ui.docs": "Docs",
+    "ui.hero": "Start",
+    "ui.performance": "Fan",
+    "ui.docs": "Night",
     "ui.upload": "Upload Media",
     "ui.reset": "HTML",
+    "ui.resetFan": "Reset fan",
     "ui.wind": "Wind",
     "ui.foil": "Foil",
     "ui.pull": "Cursor pull",
@@ -63,43 +76,46 @@ const translations = {
     "status.scroll": "Scroll captured",
     "status.fallback": "Fallback texture",
     "status.loading": "Loading media",
-    "source.brand": "HTML in Canvas",
-    "source.nav.overview": "Overview",
-    "source.nav.performance": "Performance",
-    "source.nav.docs": "Documentation",
-    "home.eyebrow": "WICG experiment",
-    "home.title": "HTML in Canvas.",
-    "home.lead": "Experience true, artifact-free DOM rendering directly inside your WebGL scenes. Zero hacks. Uncompromising performance.",
-    "home.button": "View Proposal",
-    "home.featureA.title": "Seamless Integration",
-    "home.featureA.body": "Native layout, CSS painting, and browser accessibility become a texture you can bend, light, and compose in 3D.",
-    "home.featureB.title": "Real-time Interaction",
-    "home.featureB.body": "Pointer, wheel, and responsive layout state can be projected into your spatial interface without leaving the DOM model.",
-    "performance.eyebrow": "Frame budget",
-    "performance.title": "Designed for Performance.",
-    "performance.lead": "Built to run at 60FPS. The layout pass only runs when browser state changes, keeping your shader work free for atmosphere.",
-    "performance.metricA": "DOM paint capture",
-    "performance.metricB": "cloth vertices",
-    "performance.metricC": "constraint passes",
-    "performance.featureA.title": "Native Quality",
-    "performance.featureA.body": "Because the page is still HTML, typography remains crisp before it is sampled into a physical surface.",
-    "performance.featureB.title": "GPU Friendly",
-    "performance.featureB.body": "After capture, the page becomes an ordinary texture that can use reflections, normals, shadows, and post effects.",
-    "docs.eyebrow": "Draft API",
-    "docs.title": "DOM nodes as pixels.",
-    "docs.lead": "A canvas texture can represent a living section of the document, carrying browser layout into physically based rendering.",
-    "docs.linkA": "Paint lifecycle",
-    "docs.linkB": "Pointer projection",
-    "docs.linkC": "Accessibility",
-    "docs.linkD": "GPU upload path",
+    "status.fanReset": "Fan reset",
+    "source.brand": "Canvas Cinema Guide",
+    "source.nav.overview": "Start",
+    "source.nav.performance": "Fan",
+    "source.nav.docs": "Night",
+    "home.eyebrow": "Start here",
+    "home.title": "How to use",
+    "home.lead": "Upload an image or video, place the fan, then drag the curtain to watch the screen become a physical cinema surface.",
+    "home.stepA": "Tap Upload Media to place your own image or video on the curtain.",
+    "home.stepB": "Use the fan controls to change wind, position, and direction.",
+    "home.stepC": "Drag the curtain with the mouse or touch to bend the screen by hand.",
+    "performance.eyebrow": "Fan control",
+    "performance.title": "Move the wind",
+    "performance.lead": "The fan can move left and right, up and down, or forward and backward. Reset brings it back to the default cinema position.",
+    "performance.metricA": "Move across the curtain",
+    "performance.metricB": "Raise or lower the fan",
+    "performance.metricC": "Push it back or forward",
+    "performance.featureA.title": "Arrow sliders",
+    "performance.featureA.body": "The small controller attached to the fan gives fast movement without opening the full control panel.",
+    "performance.featureB.title": "Reset position",
+    "performance.featureB.body": "Use Reset fan if the fan moves out of view or you want to return to the balanced starting point.",
+    "docs.eyebrow": "Night cinema",
+    "docs.title": "Open-air screen",
+    "docs.lead": "Turn on Night cinema for a romantic star field, then adjust light direction, size, strength, range, and star glow.",
+    "docs.cardA": "Wheel zooms only the camera view.",
+    "docs.cardB": "Content scroll moves only the instruction page.",
+    "docs.cardC": "Upload again any time to replace the curtain texture.",
+    "docs.linkA": "Upload media",
+    "docs.linkB": "Move the fan",
+    "docs.linkC": "Drag curtain",
+    "docs.linkD": "Adjust lights",
   },
   zh: {
     "ui.title": "画布中的 HTML",
-    "ui.hero": "主页",
-    "ui.performance": "性能",
-    "ui.docs": "文档",
+    "ui.hero": "开始",
+    "ui.performance": "风扇",
+    "ui.docs": "星空",
     "ui.upload": "上传媒体",
     "ui.reset": "HTML",
+    "ui.resetFan": "重置风扇",
     "ui.wind": "风力",
     "ui.foil": "镀膜",
     "ui.pull": "鼠标牵引",
@@ -123,43 +139,46 @@ const translations = {
     "status.scroll": "滚动已捕获",
     "status.fallback": "备用纹理",
     "status.loading": "正在载入媒体",
-    "source.brand": "画布中的 HTML",
-    "source.nav.overview": "概览",
-    "source.nav.performance": "性能",
-    "source.nav.docs": "文档",
-    "home.eyebrow": "WICG 实验",
-    "home.title": "画布中的 HTML。",
-    "home.lead": "把真实 DOM 直接放进 WebGL 场景。少一点障眼法，多一点原生质感和稳定性能。",
-    "home.button": "查看提案",
-    "home.featureA.title": "无缝融合",
-    "home.featureA.body": "原生布局、CSS 绘制和浏览器可访问性会变成一块可以弯曲、受光、组合的 3D 纹理。",
-    "home.featureB.title": "实时交互",
-    "home.featureB.body": "指针、滚轮和响应式状态会投射到空间界面里，同时保留 DOM 的工作方式。",
-    "performance.eyebrow": "帧预算",
-    "performance.title": "为性能而设计。",
-    "performance.lead": "目标是 60FPS。只有浏览器状态变化时才更新布局，把更多时间留给光照和物理效果。",
-    "performance.metricA": "DOM 绘制捕获",
-    "performance.metricB": "布料顶点",
-    "performance.metricC": "约束迭代",
-    "performance.featureA.title": "原生质量",
-    "performance.featureA.body": "页面仍然是 HTML，所以文字在被采样进物理表面之前保持清晰。",
-    "performance.featureB.title": "GPU 友好",
-    "performance.featureB.body": "捕获后，页面就是普通纹理，可以叠加反射、法线、阴影和后期效果。",
-    "docs.eyebrow": "草案 API",
-    "docs.title": "DOM 节点变成像素。",
-    "docs.lead": "一块 canvas 纹理可以代表文档里正在变化的区域，把浏览器布局带进物理渲染。",
-    "docs.linkA": "绘制生命周期",
-    "docs.linkB": "指针投射",
-    "docs.linkC": "可访问性",
-    "docs.linkD": "GPU 上传路径",
+    "status.fanReset": "风扇已重置",
+    "source.brand": "星空幕布指南",
+    "source.nav.overview": "开始",
+    "source.nav.performance": "风扇",
+    "source.nav.docs": "星空",
+    "home.eyebrow": "从这里开始",
+    "home.title": "使用说明",
+    "home.lead": "上传图片或视频，摆放风扇，再拖动幕布，就能看到画面变成一块真实的露天电影屏幕。",
+    "home.stepA": "点击上传媒体，把自己的图片或视频放到幕布上。",
+    "home.stepB": "使用风扇控制调整风力、位置和方向。",
+    "home.stepC": "用鼠标或手指拖动幕布，手动弯曲这块屏幕。",
+    "performance.eyebrow": "风扇控制",
+    "performance.title": "移动风的位置",
+    "performance.lead": "风扇可以左右、上下、前后移动。重置会把它送回默认的影院位置。",
+    "performance.metricA": "沿幕布左右移动",
+    "performance.metricB": "抬高或降低风扇",
+    "performance.metricC": "向后或向前推进",
+    "performance.featureA.title": "箭头滑杆",
+    "performance.featureA.body": "风扇旁的小控制器可以快速移动风扇，不需要打开完整控制面板。",
+    "performance.featureB.title": "重置位置",
+    "performance.featureB.body": "风扇移出视野或想回到平衡起点时，点击重置风扇。",
+    "docs.eyebrow": "星空影院",
+    "docs.title": "露天电影屏幕",
+    "docs.lead": "开启星空影院后，可以调整灯光方向、大小、强弱、范围和星光浪漫度。",
+    "docs.cardA": "滚轮只负责缩放视角。",
+    "docs.cardB": "内容滚动只移动幕布说明页。",
+    "docs.cardC": "随时再次上传，替换幕布画面。",
+    "docs.linkA": "上传媒体",
+    "docs.linkB": "移动风扇",
+    "docs.linkC": "拖动幕布",
+    "docs.linkD": "调整灯光",
   },
   ja: {
     "ui.title": "Canvas 内の HTML",
-    "ui.hero": "ヒーロー",
-    "ui.performance": "性能",
-    "ui.docs": "ドキュメント",
+    "ui.hero": "開始",
+    "ui.performance": "扇風機",
+    "ui.docs": "星空",
     "ui.upload": "メディア追加",
     "ui.reset": "HTML",
+    "ui.resetFan": "扇風機リセット",
     "ui.wind": "風量",
     "ui.foil": "箔感",
     "ui.pull": "カーソル牽引",
@@ -183,35 +202,37 @@ const translations = {
     "status.scroll": "スクロールを反映",
     "status.fallback": "代替テクスチャ",
     "status.loading": "メディア読み込み中",
-    "source.brand": "Canvas 内の HTML",
-    "source.nav.overview": "概要",
-    "source.nav.performance": "性能",
-    "source.nav.docs": "資料",
-    "home.eyebrow": "WICG 実験",
-    "home.title": "Canvas 内の HTML。",
-    "home.lead": "本物の DOM を WebGL シーンに直接描画。ごまかしを減らし、自然な質感と安定した性能へ。",
-    "home.button": "提案を見る",
-    "home.featureA.title": "自然な統合",
-    "home.featureA.body": "ネイティブレイアウト、CSS ペイント、アクセシビリティが、曲げて照らせる 3D テクスチャになります。",
-    "home.featureB.title": "リアルタイム操作",
-    "home.featureB.body": "ポインター、ホイール、レスポンシブ状態を空間 UI に投影しながら、DOM の流れを保ちます。",
-    "performance.eyebrow": "フレーム予算",
-    "performance.title": "性能のための設計。",
-    "performance.lead": "60FPS を目指します。レイアウト更新は状態変化時だけに絞り、光と物理に時間を残します。",
-    "performance.metricA": "DOM ペイント取得",
-    "performance.metricB": "布の頂点",
-    "performance.metricC": "制約パス",
-    "performance.featureA.title": "ネイティブ品質",
-    "performance.featureA.body": "ページは HTML のままなので、物理表面へサンプリングされる前の文字は鮮明です。",
-    "performance.featureB.title": "GPU にやさしい",
-    "performance.featureB.body": "取得後のページは通常のテクスチャとして、反射、法線、影、ポスト効果を使えます。",
-    "docs.eyebrow": "ドラフト API",
-    "docs.title": "DOM ノードをピクセルへ。",
-    "docs.lead": "canvas テクスチャが文書内の生きた領域を表し、ブラウザレイアウトを物理レンダリングへ運びます。",
-    "docs.linkA": "描画ライフサイクル",
-    "docs.linkB": "ポインター投影",
-    "docs.linkC": "アクセシビリティ",
-    "docs.linkD": "GPU アップロード",
+    "status.fanReset": "扇風機をリセット",
+    "source.brand": "星空スクリーン案内",
+    "source.nav.overview": "開始",
+    "source.nav.performance": "扇風機",
+    "source.nav.docs": "星空",
+    "home.eyebrow": "ここから開始",
+    "home.title": "使い方",
+    "home.lead": "画像や動画をアップロードし、扇風機を配置して、スクリーンをドラッグすると屋外映画の布スクリーンになります。",
+    "home.stepA": "メディア追加で画像や動画をスクリーンに置きます。",
+    "home.stepB": "扇風機の風量、位置、向きを調整します。",
+    "home.stepC": "マウスやタッチでスクリーンをドラッグし、手で曲げます。",
+    "performance.eyebrow": "扇風機操作",
+    "performance.title": "風を動かす",
+    "performance.lead": "扇風機は左右、上下、前後に動かせます。リセットで標準のシネマ位置に戻ります。",
+    "performance.metricA": "スクリーンを横切って移動",
+    "performance.metricB": "扇風機を上下に移動",
+    "performance.metricC": "奥または手前に移動",
+    "performance.featureA.title": "矢印スライダー",
+    "performance.featureA.body": "扇風機に付いた小さな操作パネルで、フル設定を開かずに素早く移動できます。",
+    "performance.featureB.title": "位置リセット",
+    "performance.featureB.body": "見失った時や初期位置に戻したい時は、扇風機リセットを使います。",
+    "docs.eyebrow": "星空シネマ",
+    "docs.title": "屋外映画スクリーン",
+    "docs.lead": "星空シネマをオンにすると、照明方向、大きさ、強さ、範囲、星の輝きを調整できます。",
+    "docs.cardA": "ホイールは視点ズームだけを操作します。",
+    "docs.cardB": "内容スクロールは説明ページだけを動かします。",
+    "docs.cardC": "いつでも再アップロードして映像を差し替えられます。",
+    "docs.linkA": "メディア追加",
+    "docs.linkB": "扇風機移動",
+    "docs.linkC": "スクリーン操作",
+    "docs.linkD": "照明調整",
   },
 };
 
@@ -275,6 +296,8 @@ const pointerWorld = new THREE.Vector3();
 const dragPlane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
 const dragPoint = new THREE.Vector3();
 const fanDragOffset = new THREE.Vector3();
+const fanPadWorld = new THREE.Vector3();
+const fanPadScreen = new THREE.Vector3();
 const localDragTarget = new THREE.Vector3();
 
 const dragState = {
@@ -311,7 +334,7 @@ const clips = [
 clips.forEach((clip) => clothRig.add(clip));
 
 const fan = createFan();
-fan.group.position.set(4.95, -1.28, 1.62);
+fan.group.position.set(fanDefaults.x, fanDefaults.y, fanDefaults.z);
 fan.group.rotation.y = -Math.PI * 0.5;
 scene.add(fan.group);
 
@@ -376,9 +399,17 @@ autoplayInput.addEventListener("change", () => {
   params.autoplay = autoplayInput.checked;
 });
 
-[fanXInput, fanYInput, fanZInput].forEach((input) => {
+fanPositionInputs.forEach((input) => {
   input.addEventListener("input", () => {
-    fan.group.position.set(Number(fanXInput.value), Number(fanYInput.value), Number(fanZInput.value));
+    if (input === fanXInput || input === fanXSlider) {
+      setFanAxis("x", Number(input.value));
+    }
+    if (input === fanYInput || input === fanYSlider) {
+      setFanAxis("y", Number(input.value));
+    }
+    if (input === fanZInput || input === fanZSlider) {
+      setFanAxis("z", Number(input.value));
+    }
   });
 });
 
@@ -419,6 +450,10 @@ uploadInput.addEventListener("change", () => {
 
 resetTextureButton.addEventListener("click", () => {
   resetToHtmlTexture();
+});
+
+resetFanButton.addEventListener("click", () => {
+  resetFanPosition();
 });
 
 mobileControlsToggle.addEventListener("click", () => {
@@ -503,14 +538,57 @@ function setContentScroll(value, refresh) {
   }
 }
 
+function setFanAxis(axis, value) {
+  const controlsByAxis = {
+    x: fanXInput,
+    y: fanYInput,
+    z: fanZInput,
+  };
+  const input = controlsByAxis[axis];
+  const min = Number(input.min);
+  const max = Number(input.max);
+  fan.group.position[axis] = THREE.MathUtils.clamp(value, min, max);
+  syncFanInputs();
+}
+
 function syncFanInputs() {
-  fanXInput.value = fan.group.position.x.toFixed(2);
-  fanYInput.value = fan.group.position.y.toFixed(2);
-  fanZInput.value = fan.group.position.z.toFixed(2);
+  const x = fan.group.position.x.toFixed(2);
+  const y = fan.group.position.y.toFixed(2);
+  const z = fan.group.position.z.toFixed(2);
+  fanXInput.value = x;
+  fanYInput.value = y;
+  fanZInput.value = z;
+  fanXSlider.value = x;
+  fanYSlider.value = y;
+  fanZSlider.value = z;
 }
 
 function applyFanDirection() {
   fan.group.rotation.y = THREE.MathUtils.degToRad(params.fanDirection);
+}
+
+function resetFanPosition() {
+  fan.group.position.set(fanDefaults.x, fanDefaults.y, fanDefaults.z);
+  syncFanInputs();
+  setStatus("status.fanReset");
+}
+
+function updateFanMovePad() {
+  fan.group.updateMatrixWorld();
+  fanPadWorld.setFromMatrixPosition(fan.group.matrixWorld);
+  fanPadWorld.y += 1.05;
+  fanPadWorld.project(camera);
+
+  const visible = fanPadScreen.copy(fanPadWorld).z > -1 && fanPadScreen.z < 1;
+  const rawX = (fanPadScreen.x * 0.5 + 0.5) * window.innerWidth;
+  const rawY = (-fanPadScreen.y * 0.5 + 0.5) * window.innerHeight;
+  const padBounds = fanMovePad.getBoundingClientRect();
+  const mobilePadYLimit = window.innerWidth <= 720 ? Math.min(window.innerHeight - 18, 280) : window.innerHeight - 18;
+  const x = THREE.MathUtils.clamp(rawX, padBounds.width / 2 + 12, window.innerWidth - padBounds.width / 2 - 12);
+  const y = THREE.MathUtils.clamp(rawY, padBounds.height + 18, mobilePadYLimit);
+
+  fanMovePad.style.transform = `translate3d(${x}px, ${y}px, 0) translate(-50%, -115%)`;
+  fanMovePad.classList.toggle("is-visible", visible);
 }
 
 function handlePointerDown(event) {
@@ -1118,11 +1196,13 @@ function createFallbackTexture() {
   ctx.fillStyle = "#f8fbff";
   ctx.fillRect(0, 0, textureCanvas.width, textureCanvas.height);
   ctx.fillStyle = "#121418";
-  ctx.font = "800 92px Inter, sans-serif";
-  ctx.fillText("HTML in Canvas.", 240, 365);
+  ctx.font = "800 82px Inter, sans-serif";
+  ctx.fillText(t("home.title"), 170, 285);
   ctx.fillStyle = "#3f4651";
-  ctx.font = "500 28px Inter, sans-serif";
-  ctx.fillText("DOM rendered to a physical WebGL cloth surface.", 260, 426);
+  ctx.font = "700 32px Inter, sans-serif";
+  ctx.fillText(t("home.stepA"), 172, 390);
+  ctx.fillText(t("home.stepB"), 172, 455);
+  ctx.fillText(t("home.stepC"), 172, 520);
   const texture = new THREE.CanvasTexture(textureCanvas);
   texture.colorSpace = THREE.SRGBColorSpace;
   return texture;
@@ -1493,6 +1573,7 @@ function animate() {
   fan.bladeGroup.rotation.z -= delta * (18 + params.wind * 44);
   fan.group.rotation.z = Math.sin(elapsed * 1.5) * 0.025;
   controls.update();
+  updateFanMovePad();
   renderer.render(scene, camera);
   updateFps();
   requestAnimationFrame(animate);
