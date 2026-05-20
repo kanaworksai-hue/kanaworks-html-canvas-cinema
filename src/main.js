@@ -41,6 +41,7 @@ const fanDefaults = {
   x: 2,
   y: -0.56,
   z: 1.62,
+  direction: -128,
 };
 
 const fanScale = 4 / 3;
@@ -322,6 +323,9 @@ const boatLightSource = new THREE.Vector3();
 const boatLightTarget = new THREE.Vector3();
 const boatLightDirection = new THREE.Vector3();
 const boatLightAxis = new THREE.Vector3(0, 1, 0);
+const fanWindSource = new THREE.Vector3();
+const fanWindTarget = new THREE.Vector3();
+const fanWindDirection = new THREE.Vector3();
 
 const dragState = {
   mode: "none",
@@ -364,7 +368,7 @@ clothRig.add(screenGlow);
 
 const fan = createFan();
 fan.group.position.set(fanDefaults.x, fanDefaults.y, fanDefaults.z);
-fan.group.rotation.y = -Math.PI * 0.5;
+fan.group.rotation.y = THREE.MathUtils.degToRad(fanDefaults.direction);
 fan.group.scale.setScalar(fanScale);
 scene.add(fan.group);
 
@@ -641,6 +645,9 @@ function applyFanEnabled(updateStatus) {
 
 function resetFanPosition() {
   fan.group.position.set(fanDefaults.x, fanDefaults.y, fanDefaults.z);
+  params.fanDirection = fanDefaults.direction;
+  fanDirectionInput.value = String(fanDefaults.direction);
+  applyFanDirection();
   syncFanInputs();
   setStatus("status.fanReset");
 }
@@ -938,41 +945,62 @@ function makeSpotLightCanvas() {
 
 function createFan() {
   const group = new THREE.Group();
-  const white = new THREE.MeshPhysicalMaterial({
+  const bodyBlue = new THREE.MeshPhysicalMaterial({
     color: 0x2f80ff,
     roughness: 0.36,
     metalness: 0.08,
     clearcoat: 0.82,
     envMapIntensity: 1.35,
   });
-  const glass = new THREE.MeshPhysicalMaterial({
-    color: 0x8dccff,
+  const frontBlue = new THREE.MeshPhysicalMaterial({
+    color: 0xb9e7ff,
     roughness: 0.08,
     metalness: 0.02,
     transparent: true,
-    opacity: 0.34,
+    opacity: 0.46,
     clearcoat: 1,
+    envMapIntensity: 1.45,
+  });
+  const backBlue = new THREE.MeshPhysicalMaterial({
+    color: 0x0a3a73,
+    roughness: 0.42,
+    metalness: 0.04,
+    clearcoat: 0.48,
+    envMapIntensity: 0.85,
   });
   const shadowMat = new THREE.MeshBasicMaterial({ color: 0x7cc7ff, transparent: true, opacity: 0.38 });
 
-  const base = new THREE.Mesh(new THREE.CylinderGeometry(0.56, 0.68, 0.14, 64), white);
+  const base = new THREE.Mesh(new THREE.CylinderGeometry(0.56, 0.68, 0.14, 64), bodyBlue);
   base.position.y = -1.02;
   base.castShadow = true;
   base.receiveShadow = true;
   group.add(base);
 
-  const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.055, 1.52, 32), white);
+  const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.055, 1.52, 32), bodyBlue);
   pole.position.y = -0.26;
   pole.castShadow = true;
   group.add(pole);
 
   const head = new THREE.Group();
   head.position.y = 0.55;
-  const ring = new THREE.Mesh(new THREE.TorusGeometry(0.48, 0.025, 18, 96), glass);
+  const backShell = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.43, 0.18, 64, 1, true), backBlue);
+  backShell.rotation.x = Math.PI / 2;
+  backShell.position.z = -0.14;
+  backShell.castShadow = true;
+  head.add(backShell);
+
+  const backCap = new THREE.Mesh(new THREE.CircleGeometry(0.42, 64), backBlue);
+  backCap.position.z = -0.24;
+  backCap.rotation.y = Math.PI;
+  backCap.castShadow = true;
+  head.add(backCap);
+
+  const ring = new THREE.Mesh(new THREE.TorusGeometry(0.48, 0.025, 18, 96), frontBlue);
+  ring.position.z = 0.2;
   ring.castShadow = true;
   head.add(ring);
 
-  const hub = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.15, 0.34, 32), white);
+  const hub = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.15, 0.34, 32), bodyBlue);
   hub.rotation.x = Math.PI / 2;
   hub.castShadow = true;
   head.add(hub);
@@ -995,7 +1023,7 @@ function createFan() {
   for (let i = 0; i < 3; i += 1) {
     const blade = new THREE.Mesh(bladeGeometry, bladeMaterial);
     blade.rotation.z = (i / 3) * Math.PI * 2;
-    blade.position.z = 0.19;
+    blade.position.z = 0.22;
     blade.castShadow = true;
     bladeGroup.add(blade);
   }
@@ -1003,8 +1031,7 @@ function createFan() {
   group.add(head);
 
   const windDisc = new THREE.Mesh(new THREE.CircleGeometry(0.54, 64), shadowMat);
-  windDisc.position.set(-0.12, 0.55, -0.03);
-  windDisc.rotation.y = Math.PI;
+  windDisc.position.set(0, 0.55, 0.36);
   group.add(windDisc);
 
   return { group, bladeGroup };
@@ -1527,10 +1554,12 @@ function updateCloth(delta, elapsed) {
 
   const { positions, previous, original, invMass, phase, cols, rows } = cloth;
   const clarity = params.mediaClarity;
-  const fanLocal = fan.group.localToWorld(new THREE.Vector3(0, 0.58, 0.14));
+  const fanLocal = fan.group.localToWorld(fanWindSource.set(0, 0.58, 0.34));
+  const fanAhead = fan.group.localToWorld(fanWindTarget.set(0, 0.58, 1.34));
   cloth.mesh.worldToLocal(fanLocal);
-  const windAngle = THREE.MathUtils.degToRad(params.fanDirection);
-  const windX = Math.sin(windAngle);
+  cloth.mesh.worldToLocal(fanAhead);
+  fanWindDirection.copy(fanAhead).sub(fanLocal).normalize();
+  const fanPower = params.fanEnabled ? params.wind : 0;
   const pulse = 0.86 + Math.sin(elapsed * 4.2) * 0.12 + Math.sin(elapsed * 8.1) * 0.035;
 
   for (let y = 0; y <= rows; y += 1) {
@@ -1563,12 +1592,9 @@ function updateCloth(delta, elapsed) {
       previous[p + 1] = py;
       previous[p + 2] = pz;
 
-      const verticalBand = Math.sin(v * Math.PI);
       const freeBand = smoothstep(0.02, 0.22, v);
       const lowerBand = Math.max(0, (v - 0.56) / 0.44);
       const sailBand = freeBand * (0.55 + lowerBand * 0.95);
-      const rightBand = smoothstep(0.38, 1, u);
-      const leftBand = 1 - smoothstep(0, 0.35, u);
       const rippleScale = THREE.MathUtils.lerp(1, 0.22, clarity);
       const fineRipple = Math.sin(elapsed * 4.8 + u * 12.5 + v * 6.1 + phase[i]) * 0.075 * rippleScale;
       const broadRipple = Math.sin(elapsed * 2.0 + u * 4.8 - v * 3.8) * 0.12 * rippleScale;
@@ -1576,29 +1602,41 @@ function updateCloth(delta, elapsed) {
       const fromFanX = original[p] - fanLocal.x;
       const fromFanY = original[p + 1] - fanLocal.y;
       const fromFanZ = original[p + 2] - fanLocal.z;
-      const fanDistance = Math.hypot(fromFanX * 0.36, fromFanY * 0.55, fromFanZ * 0.72);
-      const fanInfluence = 0.44 + smoothstep(7.4, 0.3, fanDistance) * 0.86;
-      const fanPower = params.fanEnabled ? params.wind : 0;
+      const forwardDistance =
+        fromFanX * fanWindDirection.x + fromFanY * fanWindDirection.y + fromFanZ * fanWindDirection.z;
+      const radialX = fromFanX - fanWindDirection.x * forwardDistance;
+      const radialY = fromFanY - fanWindDirection.y * forwardDistance;
+      const radialZ = fromFanZ - fanWindDirection.z * forwardDistance;
+      const radialDistance = Math.hypot(radialX * 0.62, radialY * 0.92, radialZ * 0.62);
+      const radialLength = Math.max(0.001, Math.hypot(radialX, radialY, radialZ));
+      const coneRadius = Math.max(0.45, 0.82 + Math.max(0, forwardDistance) * 0.78);
+      const frontBand = smoothstep(0.08, 0.65, forwardDistance);
+      const coneBand = smoothstep(coneRadius, coneRadius * 0.18, radialDistance);
+      const distanceBand = smoothstep(8.8, 0.35, forwardDistance);
+      const fanInfluence = frontBand * coneBand * distanceBand;
       const wind = fanPower * pulse * fanInfluence * THREE.MathUtils.lerp(1.9, 0.88, clarity);
-      const fanVectorLength = Math.max(0.7, Math.hypot(fromFanX, fromFanY * 0.7, fromFanZ));
-      const fanVectorX = fromFanX / fanVectorLength;
-      // Blow through the curtain away from the fan's side, so it never reads as suction.
-      const blowThroughZ = fanLocal.z >= 0 ? -1 : 1;
-      const fanVectorZ = blowThroughZ * (1.18 + Math.min(Math.abs(fanLocal.z) * 0.18, 0.58));
+      const spreadX = radialX / radialLength;
+      const spreadY = radialY / radialLength;
+      const spreadZ = radialZ / radialLength;
+      const axisStrength = wind * sailBand * (1.1 + lowerBand * 0.95);
+      const spreadStrength = wind * sailBand * (0.16 + lowerBand * 0.32);
 
       const targetX =
         original[p] +
-        (windX * 0.36 + fanVectorX * 0.82) * wind * sailBand * (0.32 + rightBand * 0.26) -
-        windX * wind * leftBand * lowerBand * 0.12 +
-        broadRipple * wind * sailBand * 0.34;
+        fanWindDirection.x * axisStrength +
+        spreadX * spreadStrength +
+        broadRipple * wind * sailBand * 0.28;
       const targetY =
         original[p + 1] -
         THREE.MathUtils.lerp(0.06, 0.02, clarity) * v * v +
-        sailBand * wind * (0.22 + lowerBand * 0.74) +
+        sailBand * wind * (0.22 + lowerBand * 0.82) +
+        fanWindDirection.y * axisStrength * 0.45 +
+        spreadY * spreadStrength * 0.22 +
         Math.sin(elapsed * 2.9 + u * 7.2) * sailBand * wind * 0.16;
       const targetZ =
         original[p + 2] +
-        fanVectorZ * wind * sailBand * (1.22 + lowerBand * 1.25) +
+        fanWindDirection.z * axisStrength * 1.38 +
+        spreadZ * spreadStrength * 0.56 +
         fineRipple * wind * 1.8 +
         bottomCurl * wind * 1.8;
 
