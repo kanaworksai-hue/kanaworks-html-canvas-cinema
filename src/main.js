@@ -231,6 +231,7 @@ const params = {
   starGlow: Number(starGlowInput.value),
   page: "home",
   textureSource: "html",
+  mediaClarity: 0,
 };
 
 let statusKey = "status.html";
@@ -933,7 +934,11 @@ function addLights() {
 function setPage(page) {
   params.page = page;
   params.textureSource = "html";
+  params.mediaClarity = 0;
   stopMediaTexture();
+  refreshMaterial();
+  applyResponsiveLayout();
+  applyNightMode();
   setContentScroll(0, false);
   document.querySelectorAll(".page-view").forEach((view) => view.classList.remove("is-visible"));
   document.querySelector(`.view-${page}`).classList.add("is-visible");
@@ -949,14 +954,22 @@ function scheduleTextureRefresh(key) {
 
 function resetToHtmlTexture() {
   params.textureSource = "html";
+  params.mediaClarity = 0;
   uploadInput.value = "";
   stopMediaTexture();
+  refreshMaterial();
+  applyResponsiveLayout();
+  applyNightMode();
   refreshHtmlTexture();
 }
 
 function setMediaFile(file) {
   params.textureSource = "media";
+  params.mediaClarity = 1;
   stopMediaTexture();
+  refreshMaterial();
+  applyResponsiveLayout();
+  applyNightMode();
   setStatus("status.loading");
 
   const url = URL.createObjectURL(file);
@@ -994,10 +1007,7 @@ function setMediaFile(file) {
 
   const image = new Image();
   image.onload = () => {
-    const texture = new THREE.Texture(image);
-    texture.colorSpace = THREE.SRGBColorSpace;
-    texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
-    texture.needsUpdate = true;
+    const texture = createContainedImageTexture(image);
     setClothTexture(texture);
     setStatus("status.media");
   };
@@ -1005,11 +1015,49 @@ function setMediaFile(file) {
   mediaElement = image;
 }
 
+function createContainedImageTexture(image) {
+  const textureCanvas = document.createElement("canvas");
+  textureCanvas.width = 1200;
+  textureCanvas.height = 780;
+  const ctx = textureCanvas.getContext("2d");
+  const canvasAspect = textureCanvas.width / textureCanvas.height;
+  const imageAspect = image.naturalWidth / image.naturalHeight;
+
+  ctx.fillStyle = "#0e1624";
+  ctx.fillRect(0, 0, textureCanvas.width, textureCanvas.height);
+
+  const cover = imageAspect > canvasAspect
+    ? { width: textureCanvas.height * imageAspect, height: textureCanvas.height }
+    : { width: textureCanvas.width, height: textureCanvas.width / imageAspect };
+  ctx.save();
+  ctx.globalAlpha = 0.42;
+  ctx.filter = "blur(26px) saturate(1.2) brightness(0.72)";
+  ctx.drawImage(image, (textureCanvas.width - cover.width) / 2, (textureCanvas.height - cover.height) / 2, cover.width, cover.height);
+  ctx.restore();
+
+  const contain = imageAspect > canvasAspect
+    ? { width: textureCanvas.width, height: textureCanvas.width / imageAspect }
+    : { width: textureCanvas.height * imageAspect, height: textureCanvas.height };
+  const x = (textureCanvas.width - contain.width) / 2;
+  const y = (textureCanvas.height - contain.height) / 2;
+  ctx.fillStyle = "rgba(255, 255, 255, 0.08)";
+  ctx.fillRect(x - 12, y - 12, contain.width + 24, contain.height + 24);
+  ctx.drawImage(image, x, y, contain.width, contain.height);
+
+  const texture = new THREE.CanvasTexture(textureCanvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
+  texture.minFilter = THREE.LinearFilter;
+  texture.magFilter = THREE.LinearFilter;
+  texture.needsUpdate = true;
+  return texture;
+}
+
 function setClothTexture(texture) {
   const oldTexture = cloth.material.map;
   cloth.material.map = texture;
-  cloth.material.needsUpdate = true;
   pageTexture = texture;
+  refreshMaterial();
   if (oldTexture && oldTexture !== texture) oldTexture.dispose();
 }
 
@@ -1051,7 +1099,7 @@ async function refreshHtmlTexture() {
     const oldTexture = cloth.material.map;
     pageTexture = nextTexture;
     cloth.material.map = pageTexture;
-    cloth.material.needsUpdate = true;
+    refreshMaterial();
     if (oldTexture) oldTexture.dispose();
     setStatus("status.html");
   } catch (error) {
@@ -1081,11 +1129,16 @@ function createFallbackTexture() {
 }
 
 function refreshMaterial() {
-  cloth.material.metalness = THREE.MathUtils.lerp(0.02, 0.28, params.foil);
-  cloth.material.roughness = THREE.MathUtils.lerp(0.48, 0.16, params.foil);
-  cloth.material.envMapIntensity = THREE.MathUtils.lerp(0.72, 1.55, params.foil);
-  cloth.material.clearcoat = THREE.MathUtils.lerp(0.55, 1, params.foil);
-  cloth.material.clearcoatRoughness = THREE.MathUtils.lerp(0.24, 0.08, params.foil);
+  const clarity = params.mediaClarity;
+  cloth.material.color.setScalar(THREE.MathUtils.lerp(1, 1.03, clarity));
+  cloth.material.metalness = THREE.MathUtils.lerp(THREE.MathUtils.lerp(0.02, 0.28, params.foil), 0, clarity);
+  cloth.material.roughness = THREE.MathUtils.lerp(THREE.MathUtils.lerp(0.48, 0.16, params.foil), 0.86, clarity);
+  cloth.material.envMapIntensity = THREE.MathUtils.lerp(THREE.MathUtils.lerp(0.72, 1.55, params.foil), 0.06, clarity);
+  cloth.material.clearcoat = THREE.MathUtils.lerp(THREE.MathUtils.lerp(0.55, 1, params.foil), 0, clarity);
+  cloth.material.clearcoatRoughness = THREE.MathUtils.lerp(THREE.MathUtils.lerp(0.24, 0.08, params.foil), 1, clarity);
+  cloth.material.emissive.set(0xffffff);
+  cloth.material.emissiveMap = clarity ? cloth.material.map : null;
+  cloth.material.emissiveIntensity = clarity ? (params.night ? 1.45 : 0.16) : 0;
   cloth.material.needsUpdate = true;
 }
 
@@ -1102,6 +1155,7 @@ function updateCloth(delta, elapsed) {
   }
 
   const { positions, previous, original, invMass, phase, cols, rows } = cloth;
+  const clarity = params.mediaClarity;
   const fanLocal = fan.group.localToWorld(new THREE.Vector3(0, 0.58, 0.14));
   cloth.mesh.worldToLocal(fanLocal);
   const windAngle = THREE.MathUtils.degToRad(params.fanDirection);
@@ -1143,12 +1197,13 @@ function updateCloth(delta, elapsed) {
       const lowerBand = Math.max(0, (v - 0.56) / 0.44);
       const rightBand = smoothstep(0.38, 1, u);
       const leftBand = 1 - smoothstep(0, 0.35, u);
-      const fineRipple = Math.sin(elapsed * 4.8 + u * 12.5 + v * 6.1 + phase[i]) * 0.075;
-      const broadRipple = Math.sin(elapsed * 2.0 + u * 4.8 - v * 3.8) * 0.12;
-      const bottomCurl = lowerBand * lowerBand * Math.sin(elapsed * 3.4 + u * 10.0) * 0.26;
+      const rippleScale = THREE.MathUtils.lerp(1, 0.22, clarity);
+      const fineRipple = Math.sin(elapsed * 4.8 + u * 12.5 + v * 6.1 + phase[i]) * 0.075 * rippleScale;
+      const broadRipple = Math.sin(elapsed * 2.0 + u * 4.8 - v * 3.8) * 0.12 * rippleScale;
+      const bottomCurl = lowerBand * lowerBand * Math.sin(elapsed * 3.4 + u * 10.0) * 0.26 * rippleScale;
       const fanDistance = Math.hypot((original[p] - fanLocal.x) * 0.38, (original[p + 1] - fanLocal.y) * 0.72);
       const fanInfluence = smoothstep(5.8, 0.3, fanDistance);
-      const wind = params.wind * pulse * (0.48 + fanInfluence * 0.92);
+      const wind = params.wind * pulse * (0.48 + fanInfluence * 0.92) * THREE.MathUtils.lerp(1, 0.36, clarity);
 
       const targetX =
         original[p] +
@@ -1157,7 +1212,7 @@ function updateCloth(delta, elapsed) {
         broadRipple * wind * verticalBand * 0.18;
       const targetY =
         original[p + 1] -
-        0.3 * v * v -
+        THREE.MathUtils.lerp(0.3, 0.12, clarity) * v * v -
         lowerBand * wind * 0.22 +
         Math.sin(elapsed * 2.9 + u * 7.2) * verticalBand * wind * 0.035;
       const targetZ =
@@ -1169,7 +1224,7 @@ function updateCloth(delta, elapsed) {
 
       positions[p] = px + vx * 0.82 + (targetX - px) * 0.058;
       positions[p + 1] = py + vy * 0.82 + (targetY - py) * 0.058 + clothConfig.gravity * dt;
-      positions[p + 2] = pz + vz * 0.82 + (targetZ - pz) * 0.065;
+      positions[p + 2] = pz + vz * 0.82 + (targetZ - pz) * THREE.MathUtils.lerp(0.065, 0.038, clarity);
 
       if (params.pull && cloth.hovered > -1) {
         const hi = cloth.hovered * 3;
@@ -1305,12 +1360,13 @@ function onResize() {
 function applyResponsiveLayout() {
   const aspect = window.innerWidth / window.innerHeight;
   if (aspect < 0.72) {
-    clothRig.scale.setScalar(0.75);
-    clothRig.position.set(0, -0.28, 0);
-    camera.fov = 42;
-    camera.position.set(0.1, 0.24, 18.5);
-    controls.target.set(0, -0.06, 0.4);
-    controls.minDistance = 11;
+    const media = params.mediaClarity;
+    clothRig.scale.setScalar(THREE.MathUtils.lerp(0.75, 0.86, media));
+    clothRig.position.set(0, THREE.MathUtils.lerp(-0.28, 0.5, media), 0);
+    camera.fov = THREE.MathUtils.lerp(42, 46, media);
+    camera.position.set(0.1, THREE.MathUtils.lerp(0.24, 0.42, media), THREE.MathUtils.lerp(18.5, 18.2, media));
+    controls.target.set(0, THREE.MathUtils.lerp(-0.06, 0.08, media), 0.4);
+    controls.minDistance = THREE.MathUtils.lerp(11, 12, media);
     controls.maxDistance = 24;
   } else {
     clothRig.scale.setScalar(1);
@@ -1330,8 +1386,12 @@ function applyNightMode() {
   stars.moon.visible = params.night;
   cinemaSet.visible = params.night;
   scene.background = new THREE.Color(params.night ? 0x080d1a : 0xeef1f3);
-  scene.fog = new THREE.Fog(params.night ? 0x080d1a : 0xeef1f3, params.night ? 7 : 13, params.night ? 24 : 27);
-  renderer.toneMappingExposure = params.night ? 0.88 : 1.08;
+  scene.fog = new THREE.Fog(
+    params.night ? 0x080d1a : 0xeef1f3,
+    params.night ? (params.mediaClarity ? 20 : 7) : 13,
+    params.night ? (params.mediaClarity ? 44 : 24) : 27,
+  );
+  renderer.toneMappingExposure = params.mediaClarity ? (params.night ? 1.18 : 0.96) : (params.night ? 0.88 : 1.08);
 
   floor.material.color.set(params.night ? 0x101827 : 0xe9eef2);
   floor.material.roughness = params.night ? 1 : 0.92;
@@ -1344,6 +1404,7 @@ function applyNightMode() {
   lights.sun.color.set(params.night ? 0x8bb8ff : 0xffffff);
   lights.rim.intensity = params.night ? 2.3 : 1.25;
   lights.rim.color.set(params.night ? 0x7fb2ff : 0x9ac8ff);
+  refreshMaterial();
   applyCinemaLight();
 }
 
