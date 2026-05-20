@@ -123,7 +123,7 @@ const translations = {
     "performance.featureB.body": "Use Reset fan if the fan moves out of view or you want to return to the balanced starting point.",
     "docs.eyebrow": "Night cinema",
     "docs.title": "Open-air screen",
-    "docs.lead": "Turn on Night cinema for a brighter moon, rolling ocean waves, a canoe, and two seagulls holding the curtain.",
+    "docs.lead": "Turn on Night cinema for a brighter moon, rolling ocean waves, a canoe, an orca swimming nearby, and two seagulls holding the curtain.",
     "docs.cardA": "Wheel zooms only the camera view.",
     "docs.cardB": "Content scroll moves only the instruction page.",
     "docs.cardC": "Upload again any time to replace the curtain texture.",
@@ -195,7 +195,7 @@ const translations = {
     "performance.featureB.body": "风扇移出视野或想回到平衡起点时，点击重置风扇。",
     "docs.eyebrow": "户外影院",
     "docs.title": "露天电影屏幕",
-    "docs.lead": "开启星空影院后，月亮更明亮，海浪重新起伏，独木舟随潮汐摇摆，两只海鸥衔着幕布。",
+    "docs.lead": "开启星空影院后，月亮更明亮，海浪重新起伏，独木舟随潮汐摇摆，一只虎鲸在附近随机游动，两只海鸥衔着幕布。",
     "docs.cardA": "滚轮只负责缩放视角。",
     "docs.cardB": "内容滚动只移动幕布说明页。",
     "docs.cardC": "随时再次上传，替换幕布画面。",
@@ -267,7 +267,7 @@ const translations = {
     "performance.featureB.body": "見失った時や初期位置に戻したい時は、扇風機リセットを使います。",
     "docs.eyebrow": "星空シネマ",
     "docs.title": "屋外映画スクリーン",
-    "docs.lead": "星空シネマをオンにすると、明るい月、揺れる波、カヌー、スクリーンをくわえる二羽のカモメが現れます。",
+    "docs.lead": "星空シネマをオンにすると、明るい月、揺れる波、カヌー、近くを泳ぐシャチ、スクリーンをくわえる二羽のカモメが現れます。",
     "docs.cardA": "ホイールは視点ズームだけを操作します。",
     "docs.cardB": "内容スクロールは説明ページだけを動かします。",
     "docs.cardC": "いつでも再アップロードして映像を差し替えられます。",
@@ -1163,17 +1163,7 @@ function createCinemaSet() {
 
   const oceanGeometry = new THREE.PlaneGeometry(46, 28, 96, 48);
   const oceanBase = new Float32Array(oceanGeometry.attributes.position.array);
-  const oceanMaterial = new THREE.MeshPhysicalMaterial({
-    color: 0x1c5a82,
-    emissive: 0x061b30,
-    emissiveIntensity: 0.2,
-    roughness: 0.24,
-    metalness: 0.06,
-    clearcoat: 0.58,
-    clearcoatRoughness: 0.18,
-    envMapIntensity: 0.82,
-    side: THREE.FrontSide,
-  });
+  const oceanMaterial = createOceanMaterial();
   const ocean = new THREE.Mesh(oceanGeometry, oceanMaterial);
   ocean.rotation.x = -Math.PI / 2;
   ocean.position.set(0, -2.84, 5.2);
@@ -1190,9 +1180,77 @@ function createCinemaSet() {
   boat.userData.baseY = boat.position.y;
   group.add(boat);
 
-  group.userData = { ocean, oceanBase, boat };
+  const orca = createOrca();
+  orca.position.set(-1.35, -2.72, 1.18);
+  chooseOrcaTarget(orca, boat, true);
+  group.add(orca);
+
+  group.userData = { ocean, oceanBase, boat, orca };
 
   return group;
+}
+
+function createOceanMaterial() {
+  return new THREE.ShaderMaterial({
+    uniforms: {
+      uTime: { value: 0 },
+      uDeep: { value: new THREE.Color(0x043556) },
+      uMid: { value: new THREE.Color(0x147196) },
+      uShallow: { value: new THREE.Color(0x47d5d0) },
+      uFoam: { value: new THREE.Color(0xf1fbff) },
+    },
+    vertexShader: `
+      varying vec2 vUv;
+      varying float vWave;
+      varying vec3 vWorldPosition;
+
+      void main() {
+        vUv = uv;
+        vWave = position.z;
+        vec4 worldPosition = modelMatrix * vec4(position, 1.0);
+        vWorldPosition = worldPosition.xyz;
+        gl_Position = projectionMatrix * viewMatrix * worldPosition;
+      }
+    `,
+    fragmentShader: `
+      uniform float uTime;
+      uniform vec3 uDeep;
+      uniform vec3 uMid;
+      uniform vec3 uShallow;
+      uniform vec3 uFoam;
+      varying vec2 vUv;
+      varying float vWave;
+      varying vec3 vWorldPosition;
+
+      float waveBand(vec2 uv, float scale, float speed, float bend) {
+        float drift = sin(uv.x * bend + uTime * speed) * 0.035;
+        float line = sin((uv.y + drift) * scale + sin(uv.x * 18.0) * 1.2 - uTime * speed);
+        return smoothstep(0.72, 1.0, line * 0.5 + 0.5);
+      }
+
+      void main() {
+        float depth = smoothstep(0.12, 0.88, vUv.y);
+        vec3 color = mix(uShallow, uMid, depth);
+        color = mix(color, uDeep, smoothstep(0.58, 1.0, depth) * 0.55);
+
+        float largeFoam = waveBand(vUv, 42.0, 1.25, 8.0);
+        float fineFoam = waveBand(vUv + vec2(0.13, 0.08), 96.0, 2.05, 16.0) * 0.42;
+        float crest = smoothstep(0.035, 0.19, vWave);
+        float trough = smoothstep(0.08, -0.16, vWave) * 0.18;
+        float foam = clamp((largeFoam * 0.46 + fineFoam) * (0.28 + crest * 1.4) + trough, 0.0, 0.82);
+
+        float causticA = sin((vWorldPosition.x + vWorldPosition.z) * 5.2 + uTime * 1.4);
+        float causticB = sin((vWorldPosition.x * 0.6 - vWorldPosition.z) * 7.5 - uTime * 1.1);
+        float caustic = smoothstep(0.48, 1.0, causticA * causticB * 0.5 + 0.5);
+        color += caustic * vec3(0.08, 0.2, 0.22) * (1.0 - depth);
+        color = mix(color, uFoam, foam);
+        color += crest * vec3(0.08, 0.18, 0.2);
+
+        gl_FragColor = vec4(color, 1.0);
+      }
+    `,
+    side: THREE.FrontSide,
+  });
 }
 
 function createOceanRippleLines() {
@@ -1317,10 +1375,123 @@ function createCanoeHullGeometry(lengthScale = 1, widthScale = 1, heightScale = 
 
 function getOceanWaveHeight(x, y, elapsed) {
   return (
-    Math.sin(elapsed * 0.66 + x * 0.36 + y * 0.18) * 0.15 +
-    Math.sin(elapsed * 0.92 - x * 0.2 + y * 0.44) * 0.085 +
-    Math.sin(elapsed * 1.28 + x * 0.72 + y * 0.08) * 0.032
+    Math.sin(elapsed * 0.62 + x * 0.42 + y * 0.2) * 0.23 +
+    Math.sin(elapsed * 0.86 - x * 0.24 + y * 0.5) * 0.13 +
+    Math.sin(elapsed * 1.18 + x * 0.82 + y * 0.12) * 0.052
   );
+}
+
+function createOrca() {
+  const group = new THREE.Group();
+  const texture = new THREE.TextureLoader().load("assets/killer-whale-topdown.png");
+  texture.colorSpace = THREE.SRGBColorSpace;
+  texture.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
+
+  const material = new THREE.ShaderMaterial({
+    uniforms: {
+      uMap: { value: texture },
+      uTime: { value: 0 },
+      uTurn: { value: 0 },
+      uOpacity: { value: 0.92 },
+    },
+    vertexShader: `
+      uniform float uTime;
+      uniform float uTurn;
+      varying vec2 vUv;
+
+      void main() {
+        vUv = uv;
+        vec3 transformed = position;
+        float tail = pow(clamp(vUv.y, 0.0, 1.0), 1.75);
+        float bodyWave = sin(uTime * 5.4 - vUv.y * 9.4);
+        transformed.x += bodyWave * tail * 0.14 + uTurn * tail * 0.1;
+        transformed.y += sin(uTime * 2.2 + vUv.y * 4.0) * tail * 0.018;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(transformed, 1.0);
+      }
+    `,
+    fragmentShader: `
+      uniform sampler2D uMap;
+      uniform float uOpacity;
+      varying vec2 vUv;
+
+      void main() {
+        vec4 texel = texture2D(uMap, vUv);
+        if (texel.a < 0.03) discard;
+        gl_FragColor = vec4(texel.rgb, texel.a * uOpacity);
+      }
+    `,
+    transparent: true,
+    depthWrite: false,
+    side: THREE.DoubleSide,
+  });
+
+  const body = new THREE.Mesh(new THREE.PlaneGeometry(0.94, 1.92, 18, 72), material);
+  body.rotation.x = -Math.PI / 2;
+  body.position.y = 0.065;
+  group.add(body);
+
+  const shadow = new THREE.Mesh(
+    new THREE.CircleGeometry(0.62, 36),
+    new THREE.MeshBasicMaterial({ color: 0x001728, transparent: true, opacity: 0.28, depthWrite: false }),
+  );
+  shadow.rotation.x = -Math.PI / 2;
+  shadow.scale.set(0.76, 1.65, 1);
+  shadow.position.set(0, -0.012, -0.05);
+  group.add(shadow);
+
+  const wake = createOrcaWake();
+  group.add(wake);
+
+  group.userData = {
+    body,
+    material,
+    shadow,
+    wake,
+    target: new THREE.Vector2(),
+    speed: 0.58,
+    turnRate: 1.65,
+    targetTimer: 0,
+    lastTurn: 0,
+  };
+  return group;
+}
+
+function createOrcaWake() {
+  const group = new THREE.Group();
+  const material = new THREE.MeshBasicMaterial({
+    color: 0xeaf9ff,
+    transparent: true,
+    opacity: 0.22,
+    depthWrite: false,
+    side: THREE.DoubleSide,
+    blending: THREE.AdditiveBlending,
+  });
+
+  [0, 1, 2].forEach((index) => {
+    const ring = new THREE.Mesh(new THREE.RingGeometry(0.12, 0.17, 32), material.clone());
+    ring.rotation.x = -Math.PI / 2;
+    ring.position.set(0, 0.045, -0.58 - index * 0.26);
+    ring.scale.set(1.4 + index * 0.42, 0.58 + index * 0.1, 1);
+    ring.userData.phase = index * 0.7;
+    group.add(ring);
+  });
+  return group;
+}
+
+function chooseOrcaTarget(orca, boat, immediate = false) {
+  const angle = Math.random() * Math.PI * 2;
+  const radius = THREE.MathUtils.randFloat(1.35, 2.85);
+  const targetX = THREE.MathUtils.clamp(boat.position.x + Math.sin(angle) * radius, -3.55, 1.05);
+  const targetZ = THREE.MathUtils.clamp(boat.position.z + Math.cos(angle) * radius, 0.82, 3.55);
+  orca.userData.target.set(targetX, targetZ);
+  orca.userData.targetTimer = THREE.MathUtils.randFloat(4.5, 8.5);
+  if (immediate) {
+    orca.rotation.y = Math.atan2(targetX - orca.position.x, targetZ - orca.position.z);
+  }
+}
+
+function getAngleDelta(current, target) {
+  return Math.atan2(Math.sin(target - current), Math.cos(target - current));
 }
 
 function addLights() {
@@ -1906,7 +2077,8 @@ function applyMoonSettings(elapsed = 0) {
 function updateCinemaSet(delta, elapsed) {
   if (!params.night) return;
 
-  const { ocean, oceanBase, boat } = cinemaSet.userData;
+  const { ocean, oceanBase, boat, orca } = cinemaSet.userData;
+  ocean.material.uniforms.uTime.value = elapsed;
   const positionAttribute = ocean.geometry.attributes.position;
   const positions = positionAttribute.array;
   for (let i = 0; i < positionAttribute.count; i += 1) {
@@ -1924,6 +2096,7 @@ function updateCinemaSet(delta, elapsed) {
   boat.rotation.x = Math.sin(elapsed * 0.76 + 0.5) * 0.06;
   boat.rotation.z = Math.sin(elapsed * 1.05) * 0.075;
 
+  updateOrca(orca, boat, ocean, delta, elapsed);
   updateGulls(delta, elapsed);
 }
 
@@ -1943,6 +2116,54 @@ function updateOceanRippleLines(rippleLines, elapsed) {
       positions[p + 2] = getOceanWaveHeight(x, y, elapsed) + 0.035;
     }
     positionAttribute.needsUpdate = true;
+  });
+}
+
+function updateOrca(orca, boat, ocean, delta, elapsed) {
+  if (!orca) return;
+
+  const target = orca.userData.target;
+  const dx = target.x - orca.position.x;
+  const dz = target.y - orca.position.z;
+  const distance = Math.hypot(dx, dz);
+  orca.userData.targetTimer -= delta;
+  if (distance < 0.38 || orca.userData.targetTimer <= 0) {
+    chooseOrcaTarget(orca, boat);
+  }
+
+  const desiredAngle = Math.atan2(target.x - orca.position.x, target.y - orca.position.z);
+  const turnDelta = THREE.MathUtils.clamp(
+    getAngleDelta(orca.rotation.y, desiredAngle),
+    -orca.userData.turnRate * delta,
+    orca.userData.turnRate * delta,
+  );
+  orca.rotation.y += turnDelta;
+  orca.userData.lastTurn = THREE.MathUtils.lerp(orca.userData.lastTurn, turnDelta / Math.max(delta, 0.001), 0.08);
+
+  const speed = orca.userData.speed * (0.82 + Math.sin(elapsed * 0.54) * 0.12);
+  orca.position.x += Math.sin(orca.rotation.y) * speed * delta;
+  orca.position.z += Math.cos(orca.rotation.y) * speed * delta;
+
+  const localX = orca.position.x - ocean.position.x;
+  const localY = ocean.position.z - orca.position.z;
+  const waterHeight = getOceanWaveHeight(localX, localY, elapsed);
+  orca.position.y = ocean.position.y + waterHeight + 0.055 + Math.sin(elapsed * 1.35) * 0.012;
+  orca.rotation.z = THREE.MathUtils.clamp(-orca.userData.lastTurn * 0.14, -0.32, 0.32);
+  orca.rotation.x = Math.sin(elapsed * 1.4 + orca.position.x) * 0.025;
+
+  orca.userData.material.uniforms.uTime.value = elapsed;
+  orca.userData.material.uniforms.uTurn.value = THREE.MathUtils.clamp(orca.userData.lastTurn * 0.06, -0.22, 0.22);
+  updateOrcaWake(orca.userData.wake, elapsed, speed);
+}
+
+function updateOrcaWake(wake, elapsed, speed) {
+  if (!wake) return;
+
+  wake.children.forEach((ring, index) => {
+    const pulse = (Math.sin(elapsed * 2.3 - index * 0.8) + 1) * 0.5;
+    ring.material.opacity = (0.11 + pulse * 0.15) * THREE.MathUtils.clamp(speed, 0.25, 0.8);
+    ring.scale.x = 1.35 + index * 0.45 + pulse * 0.34;
+    ring.scale.y = 0.55 + index * 0.11 + pulse * 0.11;
   });
 }
 
