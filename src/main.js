@@ -1582,7 +1582,9 @@ function updateCloth(delta, elapsed) {
       const wind = fanPower * pulse * fanInfluence * THREE.MathUtils.lerp(1.9, 0.88, clarity);
       const fanVectorLength = Math.max(0.7, Math.hypot(fromFanX, fromFanY * 0.7, fromFanZ));
       const fanVectorX = fromFanX / fanVectorLength;
-      const fanVectorZ = -(Math.sign(fromFanZ) || (fanLocal.z < 0 ? 1 : -1)) * (1 + Math.min(Math.abs(fromFanZ) * 0.16, 0.52));
+      // Blow through the curtain away from the fan's side, so it never reads as suction.
+      const blowThroughZ = fanLocal.z >= 0 ? -1 : 1;
+      const fanVectorZ = blowThroughZ * (1.18 + Math.min(Math.abs(fanLocal.z) * 0.18, 0.58));
 
       const targetX =
         original[p] +
