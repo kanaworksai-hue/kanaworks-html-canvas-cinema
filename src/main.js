@@ -123,7 +123,7 @@ const translations = {
     "performance.featureB.body": "Use Reset fan if the fan moves out of view or you want to return to the balanced starting point.",
     "docs.eyebrow": "Night cinema",
     "docs.title": "Open-air screen",
-    "docs.lead": "Turn on Night cinema for a brighter moon, rolling ocean waves, a canoe, an orca swimming nearby, and two seagulls holding the curtain.",
+    "docs.lead": "Turn on Night cinema for a brighter moon, rolling ocean waves, a floating wooden crate, and two seagulls holding the curtain.",
     "docs.cardA": "Wheel zooms only the camera view.",
     "docs.cardB": "Content scroll moves only the instruction page.",
     "docs.cardC": "Upload again any time to replace the curtain texture.",
@@ -195,7 +195,7 @@ const translations = {
     "performance.featureB.body": "风扇移出视野或想回到平衡起点时，点击重置风扇。",
     "docs.eyebrow": "户外影院",
     "docs.title": "露天电影屏幕",
-    "docs.lead": "开启星空影院后，月亮更明亮，海浪重新起伏，独木舟随潮汐摇摆，一只虎鲸在附近随机游动，两只海鸥衔着幕布。",
+    "docs.lead": "开启星空影院后，月亮更明亮，海浪重新起伏，一个木箱在海面漂浮，两只海鸥衔着幕布。",
     "docs.cardA": "滚轮只负责缩放视角。",
     "docs.cardB": "内容滚动只移动幕布说明页。",
     "docs.cardC": "随时再次上传，替换幕布画面。",
@@ -267,7 +267,7 @@ const translations = {
     "performance.featureB.body": "見失った時や初期位置に戻したい時は、扇風機リセットを使います。",
     "docs.eyebrow": "星空シネマ",
     "docs.title": "屋外映画スクリーン",
-    "docs.lead": "星空シネマをオンにすると、明るい月、揺れる波、カヌー、近くを泳ぐシャチ、スクリーンをくわえる二羽のカモメが現れます。",
+    "docs.lead": "星空シネマをオンにすると、明るい月、揺れる波、海に浮かぶ木箱、スクリーンをくわえる二羽のカモメが現れます。",
     "docs.cardA": "ホイールは視点ズームだけを操作します。",
     "docs.cardB": "内容スクロールは説明ページだけを動かします。",
     "docs.cardC": "いつでも再アップロードして映像を差し替えられます。",
@@ -1168,24 +1168,17 @@ function createCinemaSet() {
   ocean.rotation.x = -Math.PI / 2;
   ocean.position.set(0, -2.84, 5.2);
   ocean.receiveShadow = true;
-  const rippleLines = createOceanRippleLines();
-  ocean.add(rippleLines);
-  ocean.userData.rippleLines = rippleLines;
   group.add(ocean);
 
-  const boat = createBoat();
-  boat.position.set(-2.45, -2.25, 1.28);
-  boat.scale.setScalar(1.08);
-  boat.rotation.y = -0.28;
-  boat.userData.baseY = boat.position.y;
-  group.add(boat);
+  const crate = createWoodenCrate();
+  crate.position.set(-2.15, -2.32, 1.38);
+  crate.rotation.y = -0.34;
+  crate.userData.baseY = crate.position.y;
+  crate.userData.floatX = crate.position.x - ocean.position.x;
+  crate.userData.floatZ = ocean.position.z - crate.position.z;
+  group.add(crate);
 
-  const orca = createOrca();
-  orca.position.set(-1.35, -2.72, 1.18);
-  chooseOrcaTarget(orca, boat, true);
-  group.add(orca);
-
-  group.userData = { ocean, oceanBase, boat, orca };
+  group.userData = { ocean, oceanBase, crate };
 
   return group;
 }
@@ -1253,124 +1246,52 @@ function createOceanMaterial() {
   });
 }
 
-function createOceanRippleLines() {
-  const group = new THREE.Group();
-  const material = new THREE.LineBasicMaterial({
-    color: 0xd7edff,
-    transparent: true,
-    opacity: 0.36,
-    depthWrite: false,
-    fog: false,
-    blending: THREE.AdditiveBlending,
+function createWoodenCrate() {
+  const crate = new THREE.Group();
+  const woodMaterial = new THREE.MeshStandardMaterial({ color: 0x8a5734, roughness: 0.76, metalness: 0.02 });
+  const sideMaterial = new THREE.MeshStandardMaterial({ color: 0x6a3d24, roughness: 0.82, metalness: 0.02 });
+  const darkMaterial = new THREE.MeshStandardMaterial({ color: 0x2c1a12, roughness: 0.88, metalness: 0.01 });
+
+  const core = new THREE.Mesh(new THREE.BoxGeometry(1.05, 0.58, 0.78), woodMaterial);
+  core.castShadow = true;
+  core.receiveShadow = true;
+  crate.add(core);
+
+  const plankGeometry = new THREE.BoxGeometry(0.1, 0.065, 0.86);
+  [-0.42, 0, 0.42].forEach((x) => {
+    const plank = new THREE.Mesh(plankGeometry, sideMaterial);
+    plank.position.set(x, 0.34, 0);
+    plank.castShadow = true;
+    crate.add(plank);
   });
-  const rows = [-10.5, -7.2, -4.1, -1.3, 1.7, 4.8, 8.2, 11.2];
-  rows.forEach((row, rowIndex) => {
-    const geometry = new THREE.BufferGeometry();
-    const positions = new Float32Array(72 * 3);
-    for (let i = 0; i < 72; i += 1) {
-      const progress = i / 71;
-      const x = THREE.MathUtils.lerp(-20.5, 20.5, progress);
-      const y = row + Math.sin(progress * Math.PI * 2 + rowIndex) * 0.28;
-      positions[i * 3] = x;
-      positions[i * 3 + 1] = y;
-      positions[i * 3 + 2] = 0.02;
-    }
-    geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
-    const line = new THREE.Line(geometry, material);
-    line.userData.baseRow = row;
-    line.userData.phase = rowIndex * 0.7;
-    group.add(line);
+
+  [-0.48, 0.48].forEach((x) => {
+    const strap = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.68, 0.86), darkMaterial);
+    strap.position.set(x, 0.02, 0);
+    strap.castShadow = true;
+    crate.add(strap);
   });
-  return group;
-}
 
-function createBoat() {
-  const boat = new THREE.Group();
-  boat.userData.baseY = -2.28;
-
-  const woodMaterial = new THREE.MeshStandardMaterial({ color: 0x8a552f, roughness: 0.62, metalness: 0.02 });
-  const innerMaterial = new THREE.MeshStandardMaterial({ color: 0x5a301e, roughness: 0.76, metalness: 0.02 });
-  const darkWoodMaterial = new THREE.MeshStandardMaterial({ color: 0x2f1b13, roughness: 0.8, metalness: 0.02 });
-
-  const hullGeometry = createCanoeHullGeometry();
-  const hull = new THREE.Mesh(hullGeometry, woodMaterial);
-  hull.castShadow = true;
-  hull.receiveShadow = true;
-  boat.add(hull);
-
-  const innerGeometry = createCanoeHullGeometry(0.82, 0.7, 0.55);
-  const inner = new THREE.Mesh(innerGeometry, innerMaterial);
-  inner.position.y = 0.035;
-  inner.scale.y = 0.72;
-  inner.castShadow = true;
-  boat.add(inner);
-
-  [-1, 1].forEach((side) => {
-    const rim = new THREE.Mesh(new THREE.BoxGeometry(1.72, 0.045, 0.045), darkWoodMaterial);
-    rim.position.set(0, 0.18, side * 0.23);
-    rim.rotation.y = side * 0.08;
+  [-0.35, 0.35].forEach((z) => {
+    const rim = new THREE.Mesh(new THREE.BoxGeometry(1.14, 0.07, 0.08), darkMaterial);
+    rim.position.set(0, 0.35, z);
     rim.castShadow = true;
-    boat.add(rim);
+    crate.add(rim);
   });
 
-  [-0.42, 0.42].forEach((x) => {
-    const seat = new THREE.Mesh(new THREE.BoxGeometry(0.085, 0.045, 0.45), darkWoodMaterial);
-    seat.position.set(x, 0.24, 0);
-    seat.castShadow = true;
-    boat.add(seat);
+  const cornerGeometry = new THREE.BoxGeometry(0.09, 0.66, 0.09);
+  [-0.56, 0.56].forEach((x) => {
+    [-0.4, 0.4].forEach((z) => {
+      const corner = new THREE.Mesh(cornerGeometry, darkMaterial);
+      corner.position.set(x, 0.02, z);
+      corner.castShadow = true;
+      crate.add(corner);
+    });
   });
 
-  [-0.98, 0.98].forEach((x) => {
-    const cap = new THREE.Mesh(new THREE.SphereGeometry(0.105, 18, 10), woodMaterial);
-    cap.scale.set(1.45, 0.42, 0.34);
-    cap.position.set(x, 0.05, 0);
-    cap.castShadow = true;
-    boat.add(cap);
-  });
-
-  return boat;
-}
-
-function createCanoeHullGeometry(lengthScale = 1, widthScale = 1, heightScale = 1) {
-  const stations = [
-    { x: -1.02, width: 0.025, top: 0.035, keel: -0.06 },
-    { x: -0.68, width: 0.22, top: 0.155, keel: -0.18 },
-    { x: 0, width: 0.31, top: 0.19, keel: -0.25 },
-    { x: 0.68, width: 0.22, top: 0.155, keel: -0.18 },
-    { x: 1.02, width: 0.025, top: 0.035, keel: -0.06 },
-  ];
-  const positions = [];
-  const indices = [];
-
-  stations.forEach((station) => {
-    positions.push(
-      station.x * lengthScale,
-      station.top * heightScale,
-      -station.width * widthScale,
-      station.x * lengthScale,
-      station.top * heightScale,
-      station.width * widthScale,
-      station.x * lengthScale,
-      station.keel * heightScale,
-      0,
-    );
-  });
-
-  for (let i = 0; i < stations.length - 1; i += 1) {
-    const a = i * 3;
-    const b = (i + 1) * 3;
-    indices.push(a, b, b + 2, a, b + 2, a + 2);
-    indices.push(a + 1, a + 2, b + 2, a + 1, b + 2, b + 1);
-  }
-  indices.push(0, 2, 1);
-  const end = (stations.length - 1) * 3;
-  indices.push(end, end + 1, end + 2);
-
-  const geometry = new THREE.BufferGeometry();
-  geometry.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
-  geometry.setIndex(indices);
-  geometry.computeVertexNormals();
-  return geometry;
+  crate.scale.set(0.9, 0.9, 0.9);
+  crate.rotation.x = -0.06;
+  return crate;
 }
 
 function getOceanWaveHeight(x, y, elapsed) {
@@ -1379,119 +1300,6 @@ function getOceanWaveHeight(x, y, elapsed) {
     Math.sin(elapsed * 0.86 - x * 0.24 + y * 0.5) * 0.13 +
     Math.sin(elapsed * 1.18 + x * 0.82 + y * 0.12) * 0.052
   );
-}
-
-function createOrca() {
-  const group = new THREE.Group();
-  const texture = new THREE.TextureLoader().load("assets/killer-whale-topdown.png");
-  texture.colorSpace = THREE.SRGBColorSpace;
-  texture.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
-
-  const material = new THREE.ShaderMaterial({
-    uniforms: {
-      uMap: { value: texture },
-      uTime: { value: 0 },
-      uTurn: { value: 0 },
-      uOpacity: { value: 0.92 },
-    },
-    vertexShader: `
-      uniform float uTime;
-      uniform float uTurn;
-      varying vec2 vUv;
-
-      void main() {
-        vUv = uv;
-        vec3 transformed = position;
-        float tail = pow(clamp(vUv.y, 0.0, 1.0), 1.75);
-        float bodyWave = sin(uTime * 5.4 - vUv.y * 9.4);
-        transformed.x += bodyWave * tail * 0.14 + uTurn * tail * 0.1;
-        transformed.y += sin(uTime * 2.2 + vUv.y * 4.0) * tail * 0.018;
-        gl_Position = projectionMatrix * modelViewMatrix * vec4(transformed, 1.0);
-      }
-    `,
-    fragmentShader: `
-      uniform sampler2D uMap;
-      uniform float uOpacity;
-      varying vec2 vUv;
-
-      void main() {
-        vec4 texel = texture2D(uMap, vUv);
-        if (texel.a < 0.03) discard;
-        gl_FragColor = vec4(texel.rgb, texel.a * uOpacity);
-      }
-    `,
-    transparent: true,
-    depthWrite: false,
-    side: THREE.DoubleSide,
-  });
-
-  const body = new THREE.Mesh(new THREE.PlaneGeometry(0.94, 1.92, 18, 72), material);
-  body.rotation.x = -Math.PI / 2;
-  body.position.y = 0.065;
-  group.add(body);
-
-  const shadow = new THREE.Mesh(
-    new THREE.CircleGeometry(0.62, 36),
-    new THREE.MeshBasicMaterial({ color: 0x001728, transparent: true, opacity: 0.28, depthWrite: false }),
-  );
-  shadow.rotation.x = -Math.PI / 2;
-  shadow.scale.set(0.76, 1.65, 1);
-  shadow.position.set(0, -0.012, -0.05);
-  group.add(shadow);
-
-  const wake = createOrcaWake();
-  group.add(wake);
-
-  group.userData = {
-    body,
-    material,
-    shadow,
-    wake,
-    target: new THREE.Vector2(),
-    speed: 0.58,
-    turnRate: 1.65,
-    targetTimer: 0,
-    lastTurn: 0,
-  };
-  return group;
-}
-
-function createOrcaWake() {
-  const group = new THREE.Group();
-  const material = new THREE.MeshBasicMaterial({
-    color: 0xeaf9ff,
-    transparent: true,
-    opacity: 0.22,
-    depthWrite: false,
-    side: THREE.DoubleSide,
-    blending: THREE.AdditiveBlending,
-  });
-
-  [0, 1, 2].forEach((index) => {
-    const ring = new THREE.Mesh(new THREE.RingGeometry(0.12, 0.17, 32), material.clone());
-    ring.rotation.x = -Math.PI / 2;
-    ring.position.set(0, 0.045, -0.58 - index * 0.26);
-    ring.scale.set(1.4 + index * 0.42, 0.58 + index * 0.1, 1);
-    ring.userData.phase = index * 0.7;
-    group.add(ring);
-  });
-  return group;
-}
-
-function chooseOrcaTarget(orca, boat, immediate = false) {
-  const angle = Math.random() * Math.PI * 2;
-  const radius = THREE.MathUtils.randFloat(1.35, 2.85);
-  const targetX = THREE.MathUtils.clamp(boat.position.x + Math.sin(angle) * radius, -3.55, 1.05);
-  const targetZ = THREE.MathUtils.clamp(boat.position.z + Math.cos(angle) * radius, 0.82, 3.55);
-  orca.userData.target.set(targetX, targetZ);
-  orca.userData.targetTimer = THREE.MathUtils.randFloat(4.5, 8.5);
-  if (immediate) {
-    orca.rotation.y = Math.atan2(targetX - orca.position.x, targetZ - orca.position.z);
-  }
-}
-
-function getAngleDelta(current, target) {
-  return Math.atan2(Math.sin(target - current), Math.cos(target - current));
 }
 
 function addLights() {
@@ -2077,7 +1885,7 @@ function applyMoonSettings(elapsed = 0) {
 function updateCinemaSet(delta, elapsed) {
   if (!params.night) return;
 
-  const { ocean, oceanBase, boat, orca } = cinemaSet.userData;
+  const { ocean, oceanBase, crate } = cinemaSet.userData;
   ocean.material.uniforms.uTime.value = elapsed;
   const positionAttribute = ocean.geometry.attributes.position;
   const positions = positionAttribute.array;
@@ -2089,82 +1897,15 @@ function updateCinemaSet(delta, elapsed) {
   }
   positionAttribute.needsUpdate = true;
   ocean.geometry.computeVertexNormals();
-  updateOceanRippleLines(ocean.userData.rippleLines, elapsed);
 
   const tide = Math.sin(elapsed * 0.82) * 0.08 + Math.sin(elapsed * 1.7 + 0.6) * 0.025;
-  boat.position.y = boat.userData.baseY + tide;
-  boat.rotation.x = Math.sin(elapsed * 0.76 + 0.5) * 0.06;
-  boat.rotation.z = Math.sin(elapsed * 1.05) * 0.075;
+  const crateWave = getOceanWaveHeight(crate.userData.floatX, crate.userData.floatZ, elapsed);
+  crate.position.y = crate.userData.baseY + crateWave + tide * 0.36;
+  crate.rotation.x = -0.06 + Math.sin(elapsed * 0.76 + 0.5) * 0.09;
+  crate.rotation.z = Math.sin(elapsed * 1.05) * 0.11;
+  crate.rotation.y = -0.34 + Math.sin(elapsed * 0.34) * 0.08;
 
-  updateOrca(orca, boat, ocean, delta, elapsed);
   updateGulls(delta, elapsed);
-}
-
-function updateOceanRippleLines(rippleLines, elapsed) {
-  if (!rippleLines) return;
-
-  rippleLines.children.forEach((line, rowIndex) => {
-    const positionAttribute = line.geometry.attributes.position;
-    const positions = positionAttribute.array;
-    for (let i = 0; i < positionAttribute.count; i += 1) {
-      const p = i * 3;
-      const progress = i / (positionAttribute.count - 1);
-      const x = THREE.MathUtils.lerp(-20.5, 20.5, progress);
-      const y = line.userData.baseRow + Math.sin(progress * Math.PI * 2 + elapsed * 0.35 + line.userData.phase) * 0.34;
-      positions[p] = x + Math.sin(elapsed * 0.18 + rowIndex) * 0.18;
-      positions[p + 1] = y;
-      positions[p + 2] = getOceanWaveHeight(x, y, elapsed) + 0.035;
-    }
-    positionAttribute.needsUpdate = true;
-  });
-}
-
-function updateOrca(orca, boat, ocean, delta, elapsed) {
-  if (!orca) return;
-
-  const target = orca.userData.target;
-  const dx = target.x - orca.position.x;
-  const dz = target.y - orca.position.z;
-  const distance = Math.hypot(dx, dz);
-  orca.userData.targetTimer -= delta;
-  if (distance < 0.38 || orca.userData.targetTimer <= 0) {
-    chooseOrcaTarget(orca, boat);
-  }
-
-  const desiredAngle = Math.atan2(target.x - orca.position.x, target.y - orca.position.z);
-  const turnDelta = THREE.MathUtils.clamp(
-    getAngleDelta(orca.rotation.y, desiredAngle),
-    -orca.userData.turnRate * delta,
-    orca.userData.turnRate * delta,
-  );
-  orca.rotation.y += turnDelta;
-  orca.userData.lastTurn = THREE.MathUtils.lerp(orca.userData.lastTurn, turnDelta / Math.max(delta, 0.001), 0.08);
-
-  const speed = orca.userData.speed * (0.82 + Math.sin(elapsed * 0.54) * 0.12);
-  orca.position.x += Math.sin(orca.rotation.y) * speed * delta;
-  orca.position.z += Math.cos(orca.rotation.y) * speed * delta;
-
-  const localX = orca.position.x - ocean.position.x;
-  const localY = ocean.position.z - orca.position.z;
-  const waterHeight = getOceanWaveHeight(localX, localY, elapsed);
-  orca.position.y = ocean.position.y + waterHeight + 0.055 + Math.sin(elapsed * 1.35) * 0.012;
-  orca.rotation.z = THREE.MathUtils.clamp(-orca.userData.lastTurn * 0.14, -0.32, 0.32);
-  orca.rotation.x = Math.sin(elapsed * 1.4 + orca.position.x) * 0.025;
-
-  orca.userData.material.uniforms.uTime.value = elapsed;
-  orca.userData.material.uniforms.uTurn.value = THREE.MathUtils.clamp(orca.userData.lastTurn * 0.06, -0.22, 0.22);
-  updateOrcaWake(orca.userData.wake, elapsed, speed);
-}
-
-function updateOrcaWake(wake, elapsed, speed) {
-  if (!wake) return;
-
-  wake.children.forEach((ring, index) => {
-    const pulse = (Math.sin(elapsed * 2.3 - index * 0.8) + 1) * 0.5;
-    ring.material.opacity = (0.11 + pulse * 0.15) * THREE.MathUtils.clamp(speed, 0.25, 0.8);
-    ring.scale.x = 1.35 + index * 0.45 + pulse * 0.34;
-    ring.scale.y = 0.55 + index * 0.11 + pulse * 0.11;
-  });
 }
 
 function updateGulls(delta, elapsed) {
