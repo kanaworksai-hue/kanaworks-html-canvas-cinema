@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HTML in Canvas Cloth</title>
+    <link rel="icon" href="data:," />
+    <link rel="stylesheet" href="src/styles.css" />
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://cdn.jsdelivr.net/npm/three@0.181.2/build/three.module.js",
+          "three/examples/jsm/": "https://cdn.jsdelivr.net/npm/three@0.181.2/examples/jsm/",
+          "html2canvas": "https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.esm.js"
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <main id="app">
+      <canvas id="scene"></canvas>
+
+      <section class="hud" aria-label="Scene controls">
+        <div class="hud-row hud-title">
+          <span data-i18n="ui.title">HTML in Canvas</span>
+          <span id="fps">60 FPS</span>
+        </div>
+        <div class="segmented language-tabs" role="group" aria-label="Language">
+          <button class="lang-button is-active" type="button" data-lang="en">EN</button>
+          <button class="lang-button" type="button" data-lang="zh">中文</button>
+          <button class="lang-button" type="button" data-lang="ja">日本語</button>
+        </div>
+        <div class="segmented" role="group" aria-label="Page texture">
+          <button class="mode-button is-active" type="button" data-page="home" data-i18n="ui.hero">Hero</button>
+          <button class="mode-button" type="button" data-page="performance" data-i18n="ui.performance">Performance</button>
+          <button class="mode-button" type="button" data-page="docs" data-i18n="ui.docs">Docs</button>
+        </div>
+        <div class="media-row">
+          <button id="upload-button" type="button" data-i18n="ui.upload">Upload Media</button>
+          <button id="reset-texture" type="button" data-i18n="ui.reset">HTML</button>
+          <input id="media-upload" type="file" accept="image/*,video/*" />
+        </div>
+        <label class="control-line">
+          <span data-i18n="ui.wind">Wind</span>
+          <input id="wind" type="range" min="0" max="1" value="0.72" step="0.01" />
+        </label>
+        <label class="control-line">
+          <span data-i18n="ui.foil">Foil</span>
+          <input id="foil" type="range" min="0" max="1" value="0.42" step="0.01" />
+        </label>
+        <label class="toggle-line">
+          <span data-i18n="ui.pull">Cursor pull</span>
+          <input id="pull" type="checkbox" checked />
+        </label>
+        <label class="toggle-line">
+          <span data-i18n="ui.night">Night cinema</span>
+          <input id="night" type="checkbox" />
+        </label>
+        <div class="control-group">
+          <div class="group-title" data-i18n="ui.contentControls">Curtain content</div>
+          <label class="control-line">
+            <span data-i18n="ui.contentScroll">Content scroll</span>
+            <input id="content-scroll" type="range" min="-170" max="46" value="0" step="1" />
+          </label>
+          <label class="toggle-line">
+            <span data-i18n="ui.autoplay">Auto text</span>
+            <input id="autoplay" type="checkbox" />
+          </label>
+        </div>
+        <div class="control-group">
+          <div class="group-title" data-i18n="ui.fanControls">Fan coordinates</div>
+          <div class="coordinate-grid">
+            <label>
+              <span>X</span>
+              <input id="fan-x" type="number" min="-5.6" max="5.8" value="4.95" step="0.1" />
+            </label>
+            <label>
+              <span>Y</span>
+              <input id="fan-y" type="number" min="-2.15" max="2.4" value="-1.28" step="0.1" />
+            </label>
+            <label>
+              <span>Z</span>
+              <input id="fan-z" type="number" min="0.2" max="3.4" value="1.62" step="0.1" />
+            </label>
+          </div>
+          <label class="control-line">
+            <span data-i18n="ui.fanDirection">Direction</span>
+            <input id="fan-direction" type="range" min="-180" max="180" value="-90" step="1" />
+          </label>
+        </div>
+        <div class="control-group night-controls">
+          <div class="group-title" data-i18n="ui.lightControls">Cinema light</div>
+          <label class="control-line">
+            <span data-i18n="ui.lightDirection">Light dir</span>
+            <input id="light-direction" type="range" min="-55" max="55" value="0" step="1" />
+          </label>
+          <label class="control-line">
+            <span data-i18n="ui.lightSize">Light size</span>
+            <input id="light-size" type="range" min="0.45" max="1.7" value="1" step="0.01" />
+          </label>
+          <label class="control-line">
+            <span data-i18n="ui.lightStrength">Strength</span>
+            <input id="light-strength" type="range" min="0" max="3" value="1.35" step="0.01" />
+          </label>
+          <label class="control-line">
+            <span data-i18n="ui.lightRange">Range</span>
+            <input id="light-range" type="range" min="4" max="14" value="9" step="0.1" />
+          </label>
+          <label class="control-line">
+            <span data-i18n="ui.starGlow">Star glow</span>
+            <input id="star-glow" type="range" min="0.3" max="1.8" value="1.15" step="0.01" />
+          </label>
+        </div>
+      </section>
+
+      <aside class="creator-card" aria-label="KanaWorks_AI">
+        <img src="assets/kanaworks-ai-logo.jpg" alt="KanaWorks_AI logo" />
+        <div>
+          <strong>KanaWorks_AI</strong>
+          <a href="https://x.com/kanaworks_ai" target="_blank" rel="noopener noreferrer">want more? follow me</a>
+        </div>
+      </aside>
+
+      <div class="status-strip">
+        <span id="status-dot"></span>
+        <span id="status-text">Live HTML texture</span>
+      </div>
+
+      <article id="html-source" aria-hidden="true">
+        <div class="page-shell">
+          <header class="source-nav">
+            <strong class="source-brand">
+              <img src="assets/kanaworks-ai-logo.jpg" alt="" />
+              <span data-i18n="source.brand">HTML in Canvas</span>
+            </strong>
+            <nav>
+              <span data-i18n="source.nav.overview">Overview</span>
+              <span data-i18n="source.nav.performance">Performance</span>
+              <span data-i18n="source.nav.docs">Documentation</span>
+            </nav>
+          </header>
+
+          <div class="site-content" id="site-content">
+            <section class="page-view view-home is-visible">
+              <div class="hero-grid">
+                <p class="eyebrow" data-i18n="home.eyebrow">WICG experiment</p>
+                <h1 data-i18n="home.title">HTML in Canvas.</h1>
+                <p class="lead" data-i18n="home.lead">Experience true, artifact-free DOM rendering directly inside your WebGL scenes. Zero hacks. Uncompromising performance.</p>
+                <button type="button" data-i18n="home.button">View Proposal</button>
+              </div>
+              <div class="feature-band">
+                <div>
+                  <h2 data-i18n="home.featureA.title">Seamless Integration</h2>
+                  <p data-i18n="home.featureA.body">Native layout, CSS painting, and browser accessibility become a texture you can bend, light, and compose in 3D.</p>
+                </div>
+                <div>
+                  <h2 data-i18n="home.featureB.title">Real-time Interaction</h2>
+                  <p data-i18n="home.featureB.body">Pointer, wheel, and responsive layout state can be projected into your spatial interface without leaving the DOM model.</p>
+                </div>
+              </div>
+            </section>
+
+            <section class="page-view view-performance">
+              <div class="performance-copy">
+                <p class="eyebrow" data-i18n="performance.eyebrow">Frame budget</p>
+                <h1 data-i18n="performance.title">Designed for Performance.</h1>
+                <p class="lead" data-i18n="performance.lead">Built to run at 60FPS. The layout pass only runs when browser state changes, keeping your shader work free for atmosphere.</p>
+              </div>
+              <div class="metric-grid">
+                <div>
+                  <strong>0.8ms</strong>
+                  <span data-i18n="performance.metricA">DOM paint capture</span>
+                </div>
+                <div>
+                  <strong>64 x 42</strong>
+                  <span data-i18n="performance.metricB">cloth vertices</span>
+                </div>
+                <div>
+                  <strong>5x</strong>
+                  <span data-i18n="performance.metricC">constraint passes</span>
+                </div>
+              </div>
+              <div class="feature-band">
+                <div>
+                  <h2 data-i18n="performance.featureA.title">Native Quality</h2>
+                  <p data-i18n="performance.featureA.body">Because the page is still HTML, typography remains crisp before it is sampled into a physical surface.</p>
+                </div>
+                <div>
+                  <h2 data-i18n="performance.featureB.title">GPU Friendly</h2>
+                  <p data-i18n="performance.featureB.body">After capture, the page becomes an ordinary texture that can use reflections, normals, shadows, and post effects.</p>
+                </div>
+              </div>
+            </section>
+
+            <section class="page-view view-docs">
+              <div class="docs-grid">
+                <div>
+                  <p class="eyebrow" data-i18n="docs.eyebrow">Draft API</p>
+                  <h1 data-i18n="docs.title">DOM nodes as pixels.</h1>
+                  <p class="lead" data-i18n="docs.lead">A canvas texture can represent a living section of the document, carrying browser layout into physically based rendering.</p>
+                </div>
+                <pre><code>const surface = new HTMLCanvasElement();
+surface.attach(document.querySelector(".page"));
+material.map = new CanvasTexture(surface);</code></pre>
+              </div>
+              <div class="link-list">
+                <span data-i18n="docs.linkA">Paint lifecycle</span>
+                <span data-i18n="docs.linkB">Pointer projection</span>
+                <span data-i18n="docs.linkC">Accessibility</span>
+                <span data-i18n="docs.linkD">GPU upload path</span>
+              </div>
+            </section>
+          </div>
+        </div>
+      </article>
+    </main>
+    <script type="module" src="src/main.js"></script>
+  </body>
+</html>
