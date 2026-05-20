@@ -1163,6 +1163,7 @@ function createCinemaSet() {
 
   const oceanGeometry = new THREE.PlaneGeometry(46, 28, 96, 48);
   const oceanBase = new Float32Array(oceanGeometry.attributes.position.array);
+  const oceanPhases = createOceanVertexPhases(oceanGeometry.attributes.position.count);
   const oceanMaterial = createOceanMaterial();
   const ocean = new THREE.Mesh(oceanGeometry, oceanMaterial);
   ocean.rotation.x = -Math.PI / 2;
@@ -1176,11 +1177,38 @@ function createCinemaSet() {
   crate.userData.baseY = crate.position.y;
   crate.userData.floatX = crate.position.x - ocean.position.x;
   crate.userData.floatZ = ocean.position.z - crate.position.z;
+  crate.userData.wavePhase = createOceanPhaseSet(9001);
   group.add(crate);
 
-  group.userData = { ocean, oceanBase, crate };
+  group.userData = { ocean, oceanBase, oceanPhases, crate };
 
   return group;
+}
+
+function createOceanVertexPhases(count) {
+  const phases = new Float32Array(count * 4);
+  for (let i = 0; i < count; i += 1) {
+    const p = i * 4;
+    const phaseSet = createOceanPhaseSet(i + 1);
+    phases[p] = phaseSet[0];
+    phases[p + 1] = phaseSet[1];
+    phases[p + 2] = phaseSet[2];
+    phases[p + 3] = phaseSet[3];
+  }
+  return phases;
+}
+
+function createOceanPhaseSet(seed) {
+  const phaseA = seededUnit(seed, 11.7) * Math.PI * 2;
+  const phaseB = seededUnit(seed, 29.3) * Math.PI * 2;
+  const phaseC = seededUnit(seed, 47.9) * Math.PI * 2;
+  const amplitude = 0.74 + seededUnit(seed, 71.5) * 0.5;
+  return [phaseA, phaseB, phaseC, amplitude];
+}
+
+function seededUnit(seed, salt) {
+  const value = Math.sin(seed * 12.9898 + salt * 78.233) * 43758.5453;
+  return value - Math.floor(value);
 }
 
 function createOceanMaterial() {
@@ -1321,12 +1349,12 @@ function createWoodenCrate() {
   return crate;
 }
 
-function getOceanWaveHeight(x, y, elapsed) {
+function getOceanWaveHeight(x, y, elapsed, phaseA = 0, phaseB = 0, phaseC = 0, amplitude = 1) {
   return (
-    Math.sin(elapsed * 0.62 + x * 0.42 + y * 0.2) * 0.23 +
-    Math.sin(elapsed * 0.86 - x * 0.24 + y * 0.5) * 0.13 +
-    Math.sin(elapsed * 1.18 + x * 0.82 + y * 0.12) * 0.052
-  );
+    Math.sin(elapsed * 0.74 + phaseA + x * 0.24 + y * 0.1) * 0.16 +
+    Math.sin(elapsed * 1.03 + phaseB - x * 0.16 + y * 0.32) * 0.1 +
+    Math.sin(elapsed * 1.42 + phaseC + x * 0.54 - y * 0.08) * 0.045
+  ) * amplitude;
 }
 
 function addLights() {
@@ -1912,21 +1940,38 @@ function applyMoonSettings(elapsed = 0) {
 function updateCinemaSet(delta, elapsed) {
   if (!params.night) return;
 
-  const { ocean, oceanBase, crate } = cinemaSet.userData;
+  const { ocean, oceanBase, oceanPhases, crate } = cinemaSet.userData;
   ocean.material.uniforms.uTime.value = elapsed;
   const positionAttribute = ocean.geometry.attributes.position;
   const positions = positionAttribute.array;
   for (let i = 0; i < positionAttribute.count; i += 1) {
     const p = i * 3;
+    const phaseIndex = i * 4;
     const x = oceanBase[p];
     const y = oceanBase[p + 1];
-    positions[p + 2] = getOceanWaveHeight(x, y, elapsed);
+    positions[p + 2] = getOceanWaveHeight(
+      x,
+      y,
+      elapsed,
+      oceanPhases[phaseIndex],
+      oceanPhases[phaseIndex + 1],
+      oceanPhases[phaseIndex + 2],
+      oceanPhases[phaseIndex + 3],
+    );
   }
   positionAttribute.needsUpdate = true;
   ocean.geometry.computeVertexNormals();
 
   const tide = Math.sin(elapsed * 0.82) * 0.08 + Math.sin(elapsed * 1.7 + 0.6) * 0.025;
-  const crateWave = getOceanWaveHeight(crate.userData.floatX, crate.userData.floatZ, elapsed);
+  const crateWave = getOceanWaveHeight(
+    crate.userData.floatX,
+    crate.userData.floatZ,
+    elapsed,
+    crate.userData.wavePhase[0],
+    crate.userData.wavePhase[1],
+    crate.userData.wavePhase[2],
+    crate.userData.wavePhase[3],
+  );
   crate.position.y = crate.userData.baseY + crateWave + tide * 0.36;
   crate.rotation.x = -0.06 + Math.sin(elapsed * 0.76 + 0.5) * 0.09;
   crate.rotation.z = Math.sin(elapsed * 1.05) * 0.11;
