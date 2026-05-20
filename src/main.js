@@ -16,6 +16,7 @@ const windInput = document.querySelector("#wind");
 const foilInput = document.querySelector("#foil");
 const pullInput = document.querySelector("#pull");
 const nightInput = document.querySelector("#night");
+const fanEnabledInput = document.querySelector("#fan-enabled");
 const contentScrollInput = document.querySelector("#content-scroll");
 const autoplayInput = document.querySelector("#autoplay");
 const fanXInput = document.querySelector("#fan-x");
@@ -37,7 +38,7 @@ const fanPositionInputs = [fanXInput, fanYInput, fanZInput];
 
 const fanDefaults = {
   x: 2,
-  y: -1.28,
+  y: -0.56,
   z: 1.62,
 };
 
@@ -49,6 +50,7 @@ const translations = {
     "ui.docs": "Night",
     "ui.upload": "Upload Media",
     "ui.reset": "HTML",
+    "ui.fanEnabled": "Fan",
     "ui.resetFan": "Reset fan",
     "ui.wind": "Wind",
     "ui.foil": "Foil",
@@ -73,7 +75,11 @@ const translations = {
     "status.scroll": "Scroll captured",
     "status.fallback": "Fallback texture",
     "status.loading": "Loading media",
+    "status.videoSound": "Video with sound",
+    "status.tapSound": "Tap once to start video sound",
     "status.fanReset": "Fan reset",
+    "status.fanOn": "Fan on",
+    "status.fanOff": "Fan off",
     "source.brand": "Canvas Cinema Guide",
     "source.nav.overview": "Start",
     "source.nav.performance": "Fan",
@@ -112,6 +118,7 @@ const translations = {
     "ui.docs": "星空",
     "ui.upload": "上传媒体",
     "ui.reset": "HTML",
+    "ui.fanEnabled": "风扇",
     "ui.resetFan": "重置风扇",
     "ui.wind": "风力",
     "ui.foil": "镀膜",
@@ -136,7 +143,11 @@ const translations = {
     "status.scroll": "滚动已捕获",
     "status.fallback": "备用纹理",
     "status.loading": "正在载入媒体",
+    "status.videoSound": "视频有声播放",
+    "status.tapSound": "轻点一次开启视频声音",
     "status.fanReset": "风扇已重置",
+    "status.fanOn": "风扇已开启",
+    "status.fanOff": "风扇已关闭",
     "source.brand": "星空幕布指南",
     "source.nav.overview": "开始",
     "source.nav.performance": "风扇",
@@ -175,6 +186,7 @@ const translations = {
     "ui.docs": "星空",
     "ui.upload": "メディア追加",
     "ui.reset": "HTML",
+    "ui.fanEnabled": "扇風機",
     "ui.resetFan": "扇風機リセット",
     "ui.wind": "風量",
     "ui.foil": "箔感",
@@ -199,7 +211,11 @@ const translations = {
     "status.scroll": "スクロールを反映",
     "status.fallback": "代替テクスチャ",
     "status.loading": "メディア読み込み中",
+    "status.videoSound": "音声付き動画",
+    "status.tapSound": "一度タップして動画音声を開始",
     "status.fanReset": "扇風機をリセット",
+    "status.fanOn": "扇風機オン",
+    "status.fanOff": "扇風機オフ",
     "source.brand": "星空スクリーン案内",
     "source.nav.overview": "開始",
     "source.nav.performance": "扇風機",
@@ -238,6 +254,7 @@ const params = {
   foil: Number(foilInput.value),
   pull: pullInput.checked,
   night: nightInput.checked,
+  fanEnabled: fanEnabledInput.checked,
   autoplay: autoplayInput.checked,
   lang: "en",
   scroll: Number(contentScrollInput.value),
@@ -331,6 +348,7 @@ clips.forEach((clip) => clothRig.add(clip));
 const fan = createFan();
 fan.group.position.set(fanDefaults.x, fanDefaults.y, fanDefaults.z);
 fan.group.rotation.y = -Math.PI * 0.5;
+fan.group.scale.setScalar(2);
 scene.add(fan.group);
 
 const fanTransformControls = new TransformControls(camera, renderer.domElement);
@@ -357,6 +375,7 @@ scene.add(cinemaSet);
 
 const lights = addLights();
 applyFanDirection();
+applyFanEnabled(false);
 applyResponsiveLayout();
 applyNightMode();
 applyCinemaLight();
@@ -393,6 +412,11 @@ pullInput.addEventListener("change", () => {
 nightInput.addEventListener("change", () => {
   params.night = nightInput.checked;
   applyNightMode();
+});
+
+fanEnabledInput.addEventListener("change", () => {
+  params.fanEnabled = fanEnabledInput.checked;
+  applyFanEnabled(true);
 });
 
 contentScrollInput.addEventListener("input", () => {
@@ -584,6 +608,14 @@ function applyFanDirection() {
   fan.group.rotation.y = THREE.MathUtils.degToRad(params.fanDirection);
 }
 
+function applyFanEnabled(updateStatus) {
+  fan.group.visible = params.fanEnabled;
+  fanTransformControls.enabled = params.fanEnabled;
+  fanTransformControls.getHelper().visible = params.fanEnabled;
+  if (!params.fanEnabled && dragState.mode === "fan") endDrag({ pointerId: dragState.pointerId });
+  if (updateStatus) setStatus(params.fanEnabled ? "status.fanOn" : "status.fanOff");
+}
+
 function resetFanPosition() {
   fan.group.position.set(fanDefaults.x, fanDefaults.y, fanDefaults.z);
   syncFanInputs();
@@ -592,13 +624,15 @@ function resetFanPosition() {
 
 function handlePointerDown(event) {
   if (event.button !== 0) return;
-  if (fanTransformControls.axis || fanTransformControls.dragging) return;
   raycaster.setFromCamera(pointer, camera);
 
-  const fanHit = raycaster.intersectObject(fan.group, true)[0];
-  if (fanHit) {
-    beginFanDrag(event, fanHit.point);
-    return;
+  if (params.fanEnabled) {
+    if (fanTransformControls.axis || fanTransformControls.dragging) return;
+    const fanHit = raycaster.intersectObject(fan.group, true)[0];
+    if (fanHit) {
+      beginFanDrag(event, fanHit.point);
+      return;
+    }
   }
 
   const clothHit = raycaster.intersectObject(cloth.mesh, false)[0];
@@ -786,21 +820,21 @@ function createClip(x, y, z, scale = 1) {
 function createFan() {
   const group = new THREE.Group();
   const white = new THREE.MeshPhysicalMaterial({
-    color: 0xffffff,
+    color: 0x2f80ff,
     roughness: 0.36,
-    metalness: 0.04,
-    clearcoat: 0.64,
-    envMapIntensity: 1.2,
+    metalness: 0.08,
+    clearcoat: 0.82,
+    envMapIntensity: 1.35,
   });
   const glass = new THREE.MeshPhysicalMaterial({
-    color: 0xf6fbff,
+    color: 0x8dccff,
     roughness: 0.08,
     metalness: 0.02,
     transparent: true,
-    opacity: 0.27,
+    opacity: 0.34,
     clearcoat: 1,
   });
-  const shadowMat = new THREE.MeshBasicMaterial({ color: 0xd8e2ec, transparent: true, opacity: 0.42 });
+  const shadowMat = new THREE.MeshBasicMaterial({ color: 0x7cc7ff, transparent: true, opacity: 0.38 });
 
   const base = new THREE.Mesh(new THREE.CylinderGeometry(0.56, 0.68, 0.14, 64), white);
   base.position.y = -1.02;
@@ -831,11 +865,11 @@ function createFan() {
   bladeShape.bezierCurveTo(0.28, 0.34, 0.08, 0.27, 0, 0);
   const bladeGeometry = new THREE.ShapeGeometry(bladeShape, 24);
   const bladeMaterial = new THREE.MeshPhysicalMaterial({
-    color: 0xe9f5ff,
+    color: 0x5eb2ff,
     roughness: 0.14,
     metalness: 0,
     transparent: true,
-    opacity: 0.52,
+    opacity: 0.62,
     clearcoat: 1,
   });
 
@@ -1056,16 +1090,49 @@ function setMediaFile(file) {
   if (file.type.startsWith("video/")) {
     const video = document.createElement("video");
     video.src = url;
-    video.muted = true;
+    video.muted = false;
+    video.volume = 1;
     video.loop = true;
+    video.autoplay = true;
+    video.preload = "auto";
     video.playsInline = true;
     video.crossOrigin = "anonymous";
+    let playingWithSound = false;
+    let resumeArmed = false;
+    const armResumePlayback = () => {
+      if (resumeArmed) return;
+      resumeArmed = true;
+      const resumeVideoSound = async () => {
+        await video
+          .play()
+          .then(() => {
+            playingWithSound = !video.muted;
+            setStatus("status.videoSound");
+          })
+          .catch(() => {
+            setStatus("status.tapSound");
+          });
+      };
+      window.addEventListener("pointerdown", resumeVideoSound, { once: true });
+      window.addEventListener("keydown", resumeVideoSound, { once: true });
+    };
+    const firstPlayAttempt = video
+      .play()
+      .then(() => {
+        playingWithSound = !video.muted;
+        return true;
+      })
+      .catch(() => {
+        armResumePlayback();
+        return false;
+      });
     video.addEventListener(
       "loadeddata",
       async () => {
         mediaElement = video;
-        await video.play().catch(() => {});
-        if ("requestVideoFrameCallback" in video) {
+        const didPlay = await firstPlayAttempt;
+        if (!didPlay) armResumePlayback();
+        if (didPlay && "requestVideoFrameCallback" in video) {
           await new Promise((resolve) => video.requestVideoFrameCallback(resolve));
         }
         const texture = new THREE.VideoTexture(video);
@@ -1075,7 +1142,7 @@ function setMediaFile(file) {
         texture.generateMipmaps = false;
         videoTexture = texture;
         setClothTexture(texture);
-        setStatus("status.video");
+        setStatus(playingWithSound ? "status.videoSound" : "status.tapSound");
       },
       { once: true },
     );
@@ -1283,7 +1350,8 @@ function updateCloth(delta, elapsed) {
       const bottomCurl = lowerBand * lowerBand * Math.sin(elapsed * 3.4 + u * 10.0) * 0.26 * rippleScale;
       const fanDistance = Math.hypot((original[p] - fanLocal.x) * 0.38, (original[p + 1] - fanLocal.y) * 0.72);
       const fanInfluence = smoothstep(5.8, 0.3, fanDistance);
-      const wind = params.wind * pulse * (0.48 + fanInfluence * 0.92) * THREE.MathUtils.lerp(1, 0.36, clarity);
+      const fanPower = params.fanEnabled ? params.wind : 0;
+      const wind = fanPower * pulse * (0.48 + fanInfluence * 0.92) * THREE.MathUtils.lerp(1, 0.36, clarity);
 
       const targetX =
         original[p] +
@@ -1292,9 +1360,9 @@ function updateCloth(delta, elapsed) {
         broadRipple * wind * verticalBand * 0.18;
       const targetY =
         original[p + 1] -
-        THREE.MathUtils.lerp(0.3, 0.12, clarity) * v * v -
-        lowerBand * wind * 0.22 +
-        Math.sin(elapsed * 2.9 + u * 7.2) * verticalBand * wind * 0.035;
+        THREE.MathUtils.lerp(0.14, 0.06, clarity) * v * v +
+        lowerBand * wind * 0.28 +
+        Math.sin(elapsed * 2.9 + u * 7.2) * verticalBand * wind * 0.06;
       const targetZ =
         original[p + 2] +
         wind * windDepth * verticalBand * (0.52 + rightBand * 0.78) +
@@ -1346,12 +1414,12 @@ function updateCloth(delta, elapsed) {
 
   for (let i = 0; i < positions.length / 3; i += 1) {
     const p = i * 3;
-    if (positions[p + 1] < -2.5) {
-      positions[p + 1] = -2.5;
-      previous[p + 1] = -2.48;
+    if (positions[p + 1] < -4.4) {
+      positions[p + 1] = -4.4;
+      previous[p + 1] = -4.35;
     }
     positions[p] = THREE.MathUtils.clamp(positions[p], -5.0, 5.0);
-    positions[p + 2] = THREE.MathUtils.clamp(positions[p + 2], -0.65, 3.0);
+    positions[p + 2] = THREE.MathUtils.clamp(positions[p + 2], -1.1, 5.2);
   }
 
   cloth.geometry.attributes.position.needsUpdate = true;
@@ -1572,8 +1640,10 @@ function animate() {
   updateContentAutoplay(delta, elapsed);
   updateCloth(delta, elapsed);
   updateStars(delta, elapsed);
-  fan.bladeGroup.rotation.z -= delta * (18 + params.wind * 44);
-  fan.group.rotation.z = Math.sin(elapsed * 1.5) * 0.025;
+  if (params.fanEnabled) {
+    fan.bladeGroup.rotation.z -= delta * (18 + params.wind * 44);
+    fan.group.rotation.z = Math.sin(elapsed * 1.5) * 0.025;
+  }
   controls.update();
   renderer.render(scene, camera);
   updateFps();

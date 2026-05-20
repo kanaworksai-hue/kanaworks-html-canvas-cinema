@@ -290,9 +290,51 @@ body.is-night .reset-fan-button {
 body.is-night .creator-card,
 body.is-night .hud,
 body.is-night .status-strip {
-  border-color: rgba(180, 202, 255, 0.16);
+  border-color: rgba(190, 215, 255, 0.32);
+  color: #f5f9ff;
+  background: rgba(8, 13, 26, 0.88);
+  box-shadow:
+    0 20px 70px rgba(0, 0, 0, 0.34),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+body.is-night .hud-title,
+body.is-night .group-title,
+body.is-night .control-line,
+body.is-night .toggle-line,
+body.is-night .coordinate-grid label,
+body.is-night #fps {
+  color: #f3f7ff;
+}
+
+body.is-night .segmented {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+body.is-night .mode-button,
+body.is-night .lang-button {
+  color: #cbd8ee;
+}
+
+body.is-night .mode-button.is-active,
+body.is-night .lang-button.is-active {
+  color: #08111f;
+  background: rgba(255, 255, 255, 0.94);
+}
+
+body.is-night .media-row button {
   color: #eef5ff;
-  background: rgba(13, 18, 31, 0.62);
+  background: rgba(255, 255, 255, 0.16);
+}
+
+body.is-night .coordinate-grid input {
+  border-color: rgba(205, 224, 255, 0.42);
+  color: #08111f;
+  background: rgba(255, 255, 255, 0.9);
+}
+
+body.is-night .control-group {
+  border-top-color: rgba(205, 224, 255, 0.24);
 }
 
 body.is-night .creator-card a {
@@ -672,6 +714,18 @@ pre {
     background: #b8d8ff;
   }
 
+  body.is-night .mobile-controls-toggle,
+  body.is-night .mobile-controls-close {
+    border-color: rgba(190, 215, 255, 0.3);
+    color: #08111f;
+    background: rgba(245, 249, 255, 0.9);
+  }
+
+  body.is-night.mobile-controls-open .media-row {
+    border-bottom-color: rgba(205, 224, 255, 0.24);
+    background: rgba(8, 13, 26, 0.96);
+  }
+
   .reset-fan-button {
     min-height: 34px;
     font-size: 11px;
@@ -695,6 +749,11 @@ pre {
     min-height: 38px;
     color: #343a44;
     background: rgba(24, 29, 36, 0.08);
+  }
+
+  body.is-night.mobile-controls-open .media-row button {
+    color: #f5f9ff;
+    background: rgba(255, 255, 255, 0.16);
   }
 
   body.mobile-controls-open .media-row #reset-texture {
