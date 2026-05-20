@@ -168,6 +168,13 @@ input {
   gap: 8px;
 }
 
+.fan-actions,
+.moon-color-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
 .coordinate-grid label {
   display: grid;
   gap: 5px;
@@ -184,6 +191,12 @@ input {
   border-radius: 6px;
   color: #18202b;
   background: rgba(255, 255, 255, 0.72);
+}
+
+.moon-color-grid input[type="color"] {
+  min-height: 34px;
+  padding: 4px;
+  cursor: pointer;
 }
 
 .status-strip {
@@ -220,6 +233,12 @@ input {
 body.is-night .reset-fan-button {
   color: #08111f;
   background: #b8d8ff;
+}
+
+.reset-fan-button.is-active,
+body.is-night .reset-fan-button.is-active {
+  color: #fff;
+  background: #2567d4;
 }
 
 .creator-card {

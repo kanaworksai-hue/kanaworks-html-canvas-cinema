@@ -27,6 +27,12 @@ const fanYInput = document.querySelector("#fan-y");
 const fanZInput = document.querySelector("#fan-z");
 const fanDirectionInput = document.querySelector("#fan-direction");
 const resetFanButton = document.querySelector("#reset-fan");
+const fanVisibilityButton = document.querySelector("#fan-visibility-toggle");
+const moonColorInput = document.querySelector("#moon-color");
+const moonHaloColorInput = document.querySelector("#moon-halo-color");
+const moonBrightnessInput = document.querySelector("#moon-brightness");
+const moonSizeInput = document.querySelector("#moon-size");
+const moonHaloRangeInput = document.querySelector("#moon-halo-range");
 const uploadInput = document.querySelector("#media-upload");
 const uploadButton = document.querySelector("#upload-button");
 const fanPositionInputs = [fanXInput, fanYInput, fanZInput];
@@ -72,6 +78,14 @@ const translations = {
     "ui.autoplay": "Auto text",
     "ui.fanControls": "Fan coordinates",
     "ui.fanDirection": "Direction",
+    "ui.hideFan": "Hide fan",
+    "ui.showFan": "Show fan",
+    "ui.moonControls": "Moon",
+    "ui.moonColor": "Moon color",
+    "ui.moonHaloColor": "Halo color",
+    "ui.moonBrightness": "Brightness",
+    "ui.moonSize": "Size",
+    "ui.moonHaloRange": "Halo range",
     "ui.controls": "Controls",
     "status.html": "Live cinema guide",
     "status.media": "Media texture",
@@ -85,6 +99,8 @@ const translations = {
     "status.fanReset": "Fan reset",
     "status.fanOn": "Fan on",
     "status.fanOff": "Fan off",
+    "status.fanHidden": "Fan hidden, wind still on",
+    "status.fanShown": "Fan visible",
     "source.brand": "KANA Star Cinema",
     "source.nav.overview": "Start",
     "source.nav.performance": "Fan",
@@ -134,6 +150,14 @@ const translations = {
     "ui.autoplay": "自动播放",
     "ui.fanControls": "风扇坐标",
     "ui.fanDirection": "风向角度",
+    "ui.hideFan": "隐藏风扇",
+    "ui.showFan": "显示风扇",
+    "ui.moonControls": "月亮",
+    "ui.moonColor": "月亮颜色",
+    "ui.moonHaloColor": "光晕颜色",
+    "ui.moonBrightness": "亮度",
+    "ui.moonSize": "大小",
+    "ui.moonHaloRange": "光晕范围",
     "ui.controls": "控制",
     "status.html": "实时影院说明",
     "status.media": "媒体纹理",
@@ -147,6 +171,8 @@ const translations = {
     "status.fanReset": "风扇已重置",
     "status.fanOn": "风扇已开启",
     "status.fanOff": "风扇已关闭",
+    "status.fanHidden": "风扇已隐藏，风继续吹",
+    "status.fanShown": "风扇已显示",
     "source.brand": "KANA星空影院",
     "source.nav.overview": "开始",
     "source.nav.performance": "风扇",
@@ -196,6 +222,14 @@ const translations = {
     "ui.autoplay": "自動再生",
     "ui.fanControls": "扇風機座標",
     "ui.fanDirection": "風向き",
+    "ui.hideFan": "扇風機を隠す",
+    "ui.showFan": "扇風機を表示",
+    "ui.moonControls": "月",
+    "ui.moonColor": "月の色",
+    "ui.moonHaloColor": "光輪の色",
+    "ui.moonBrightness": "明るさ",
+    "ui.moonSize": "大きさ",
+    "ui.moonHaloRange": "光輪範囲",
     "ui.controls": "操作",
     "status.html": "ライブシネマ案内",
     "status.media": "メディアテクスチャ",
@@ -209,6 +243,8 @@ const translations = {
     "status.fanReset": "扇風機をリセット",
     "status.fanOn": "扇風機オン",
     "status.fanOff": "扇風機オフ",
+    "status.fanHidden": "扇風機を隠しました。風は継続中",
+    "status.fanShown": "扇風機を表示",
     "source.brand": "KANA星空シネマ",
     "source.nav.overview": "開始",
     "source.nav.performance": "扇風機",
@@ -248,11 +284,17 @@ const params = {
   pull: pullInput.checked,
   night: nightInput.checked,
   fanEnabled: fanEnabledInput.checked,
+  fanVisible: true,
   autoplay: autoplayInput.checked,
   lang: "en",
   scroll: Number(contentScrollInput.value),
   fanDirection: Number(fanDirectionInput.value),
   starGlow: 1.35,
+  moonColor: moonColorInput.value,
+  moonHaloColor: moonHaloColorInput.value,
+  moonBrightness: Number(moonBrightnessInput.value),
+  moonSize: Number(moonSizeInput.value),
+  moonHaloRange: Number(moonHaloRangeInput.value),
   page: "home",
   textureSource: "html",
   mediaClarity: 0,
@@ -372,6 +414,7 @@ scene.add(cinemaSet);
 const lights = addLights();
 applyFanDirection();
 applyFanEnabled(false);
+applyMoonSettings(0);
 applyResponsiveLayout();
 applyNightMode();
 
@@ -420,6 +463,11 @@ fanEnabledInput.addEventListener("change", () => {
   applyFanEnabled(true);
 });
 
+fanVisibilityButton.addEventListener("click", () => {
+  params.fanVisible = !params.fanVisible;
+  applyFanEnabled(true);
+});
+
 contentScrollInput.addEventListener("input", () => {
   setContentScroll(Number(contentScrollInput.value), true);
 });
@@ -455,6 +503,17 @@ fanTransformControls.addEventListener("objectChange", () => {
 fanDirectionInput.addEventListener("input", () => {
   params.fanDirection = Number(fanDirectionInput.value);
   applyFanDirection();
+});
+
+[moonColorInput, moonHaloColorInput, moonBrightnessInput, moonSizeInput, moonHaloRangeInput].forEach((input) => {
+  input.addEventListener("input", () => {
+    params.moonColor = moonColorInput.value;
+    params.moonHaloColor = moonHaloColorInput.value;
+    params.moonBrightness = Number(moonBrightnessInput.value);
+    params.moonSize = Number(moonSizeInput.value);
+    params.moonHaloRange = Number(moonHaloRangeInput.value);
+    applyMoonSettings(clock.elapsedTime);
+  });
 });
 
 languageCycleButton.addEventListener("click", () => {
@@ -549,6 +608,12 @@ function syncTopButtons() {
   pageCycleButton.textContent = t(pageLabelKeys[params.page]);
   nightToggleButton.classList.toggle("is-active", params.night);
   nightToggleButton.setAttribute("aria-pressed", String(params.night));
+  syncFanVisibilityButton();
+}
+
+function syncFanVisibilityButton() {
+  fanVisibilityButton.textContent = t(params.fanVisible ? "ui.hideFan" : "ui.showFan");
+  fanVisibilityButton.classList.toggle("is-active", !params.fanVisible);
 }
 
 function applyLanguage(lang) {
@@ -614,11 +679,16 @@ function applyFanDirection() {
 }
 
 function applyFanEnabled(updateStatus) {
-  fan.group.visible = params.fanEnabled;
-  fanTransformControls.enabled = params.fanEnabled;
-  fanTransformControls.getHelper().visible = params.fanEnabled;
-  if (!params.fanEnabled && dragState.mode === "fan") endDrag({ pointerId: dragState.pointerId });
-  if (updateStatus) setStatus(params.fanEnabled ? "status.fanOn" : "status.fanOff");
+  const visible = params.fanEnabled && params.fanVisible;
+  fan.group.visible = visible;
+  fanTransformControls.enabled = visible;
+  fanTransformControls.getHelper().visible = visible;
+  syncFanVisibilityButton();
+  if (!visible && dragState.mode === "fan") endDrag({ pointerId: dragState.pointerId });
+  if (updateStatus) {
+    if (!params.fanEnabled) setStatus("status.fanOff");
+    else setStatus(params.fanVisible ? "status.fanShown" : "status.fanHidden");
+  }
 }
 
 function resetFanPosition() {
@@ -634,7 +704,7 @@ function handlePointerDown(event) {
   if (event.button !== 0) return;
   raycaster.setFromCamera(pointer, camera);
 
-  if (params.fanEnabled) {
+  if (params.fanEnabled && params.fanVisible) {
     if (fanTransformControls.axis || fanTransformControls.dragging) return;
     const fanHit = raycaster.intersectObject(fan.group, true)[0];
     if (fanHit) {
@@ -1088,9 +1158,12 @@ function createCinemaSet() {
   const oceanMaterial = new THREE.MeshPhysicalMaterial({
     color: 0x123f63,
     emissive: 0x061a2b,
-    emissiveIntensity: 0.22,
-    roughness: 0.48,
-    metalness: 0.02,
+    emissiveIntensity: 0.18,
+    roughness: 0.32,
+    metalness: 0.08,
+    clearcoat: 0.36,
+    clearcoatRoughness: 0.32,
+    envMapIntensity: 0.72,
     transparent: true,
     opacity: 0.94,
     side: THREE.DoubleSide,
@@ -1688,6 +1761,7 @@ function applyNightMode() {
   stars.points.visible = params.night;
   stars.moon.visible = params.night;
   stars.moonHalo.visible = params.night;
+  applyMoonSettings(clock.elapsedTime);
   cinemaSet.visible = params.night;
   cable.visible = !params.night;
   clips.forEach((clip) => {
@@ -1718,6 +1792,16 @@ function applyNightMode() {
   refreshMaterial();
 }
 
+function applyMoonSettings(elapsed = 0) {
+  const brightness = params.moonBrightness;
+  stars.moon.material.color.set(params.moonColor);
+  stars.moonHalo.material.color.set(params.moonHaloColor);
+  stars.moon.scale.setScalar(params.moonSize);
+  stars.moonHalo.scale.setScalar(params.moonSize * params.moonHaloRange);
+  stars.moon.material.opacity = THREE.MathUtils.clamp(0.48 + brightness * 0.34, 0.55, 1);
+  stars.moonHalo.material.opacity = THREE.MathUtils.clamp(0.09 + brightness * 0.13 + Math.sin(elapsed * 0.38) * 0.025, 0.08, 0.46);
+}
+
 function updateCinemaSet(delta, elapsed) {
   if (!params.night) return;
 
@@ -1729,9 +1813,9 @@ function updateCinemaSet(delta, elapsed) {
     const x = oceanBase[p];
     const y = oceanBase[p + 1];
     positions[p + 2] =
-      Math.sin(elapsed * 0.52 + x * 0.28 + y * 0.16) * 0.052 +
-      Math.sin(elapsed * 0.7 - x * 0.12 + y * 0.34) * 0.035 +
-      Math.sin(elapsed * 0.32 + x * 0.08) * 0.018;
+      Math.sin(elapsed * 0.66 + x * 0.36 + y * 0.18) * 0.15 +
+      Math.sin(elapsed * 0.92 - x * 0.2 + y * 0.44) * 0.085 +
+      Math.sin(elapsed * 1.28 + x * 0.72 + y * 0.08) * 0.032;
   }
   positionAttribute.needsUpdate = true;
   ocean.geometry.computeVertexNormals();
@@ -1764,8 +1848,7 @@ function updateStars(delta, elapsed) {
   const colorAttribute = stars.points.geometry.attributes.color;
   stars.points.material.size = 0.028 + params.starGlow * 0.026;
   stars.points.material.opacity = 0.52 + params.starGlow * 0.28;
-  stars.moon.material.opacity = THREE.MathUtils.clamp(0.9 + params.starGlow * 0.06, 0.9, 1);
-  stars.moonHalo.material.opacity = 0.2 + Math.sin(elapsed * 0.38) * 0.025;
+  applyMoonSettings(elapsed);
 
   for (let i = 0; i < stars.phases.length; i += 1) {
     const p = i * 3;
