@@ -1219,17 +1219,24 @@ function createOceanMaterial() {
       uMid: { value: new THREE.Color(0x147196) },
       uShallow: { value: new THREE.Color(0x47d5d0) },
       uFoam: { value: new THREE.Color(0xf1fbff) },
+      uReflectLow: { value: new THREE.Color(0x071321) },
+      uReflectHigh: { value: new THREE.Color(0x8eb7ff) },
+      uMoonTint: { value: new THREE.Color(0xfff2c0) },
+      uCameraPosition: { value: new THREE.Vector3() },
+      uMoonPosition: { value: new THREE.Vector3(5.7, 5.25, -6.8) },
     },
     vertexShader: `
       varying vec2 vUv;
       varying float vWave;
       varying vec3 vWorldPosition;
+      varying vec3 vWorldNormal;
 
       void main() {
         vUv = uv;
         vWave = position.z;
         vec4 worldPosition = modelMatrix * vec4(position, 1.0);
         vWorldPosition = worldPosition.xyz;
+        vWorldNormal = normalize(mat3(modelMatrix) * normal);
         gl_Position = projectionMatrix * viewMatrix * worldPosition;
       }
     `,
@@ -1239,9 +1246,15 @@ function createOceanMaterial() {
       uniform vec3 uMid;
       uniform vec3 uShallow;
       uniform vec3 uFoam;
+      uniform vec3 uReflectLow;
+      uniform vec3 uReflectHigh;
+      uniform vec3 uMoonTint;
+      uniform vec3 uCameraPosition;
+      uniform vec3 uMoonPosition;
       varying vec2 vUv;
       varying float vWave;
       varying vec3 vWorldPosition;
+      varying vec3 vWorldNormal;
 
       float hash(vec2 p) {
         return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
@@ -1289,10 +1302,29 @@ function createOceanMaterial() {
         float sparkleB = softSparkle(worldUv * 1.8 + vec2(-0.16, 0.11), 28.0, 0.13) * 0.44;
         float glint = clamp((sparkleA + sparkleB) * (0.06 + crest * 0.2), 0.0, 0.22);
 
-        color += (shimmerBase - 0.5) * vec3(0.045, 0.12, 0.14) * (1.0 - depth * 0.45);
-        color += glint * vec3(0.18, 0.42, 0.48);
+        vec3 normalDir = normalize(vWorldNormal);
+        vec3 viewDir = normalize(uCameraPosition - vWorldPosition);
+        vec3 reflectedDir = reflect(-viewDir, normalDir);
+        float fresnel = pow(1.0 - clamp(dot(normalDir, viewDir), 0.0, 1.0), 3.0);
+        fresnel = clamp(0.08 + fresnel * 0.82, 0.0, 0.9);
+
+        vec3 skyReflection = mix(uReflectLow, uReflectHigh, smoothstep(-0.06, 0.82, reflectedDir.y));
+        float normalBend = length(normalDir.xz);
+        float refractNoise = noise(worldUv * 13.5 + normalDir.xz * 4.8 + vec2(uTime * 0.08, -uTime * 0.05));
+        vec3 refractedColor = mix(uShallow, uMid, clamp(depth + normalBend * 0.38 + (refractNoise - 0.5) * 0.18, 0.0, 1.0));
+        color = mix(color, refractedColor, 0.18 + (1.0 - fresnel) * 0.24);
+
+        vec3 moonDir = normalize(uMoonPosition - vWorldPosition);
+        float moonSpec = pow(max(dot(reflectedDir, moonDir), 0.0), 48.0) * (0.22 + crest * 0.78);
+        float moonPath = smoothstep(1.8, -0.2, abs(vWorldPosition.x - 2.8 - sin(vWorldPosition.z * 0.9 + uTime * 0.35) * 0.42));
+        moonSpec += moonPath * fresnel * smoothstep(-1.0, 5.0, vWorldPosition.z) * 0.08;
+
+        color += (shimmerBase - 0.5) * vec3(0.035, 0.1, 0.12) * (1.0 - depth * 0.45);
+        color += glint * vec3(0.14, 0.32, 0.36);
+        color = mix(color, skyReflection, fresnel * 0.42);
+        color += uMoonTint * moonSpec * 0.34;
         color = mix(color, uFoam, foam * 0.36);
-        color += crest * vec3(0.055, 0.13, 0.15);
+        color += crest * vec3(0.055, 0.13, 0.15) + normalBend * vec3(0.015, 0.04, 0.045);
 
         gl_FragColor = vec4(color, 1.0);
       }
@@ -1942,6 +1974,7 @@ function updateCinemaSet(delta, elapsed) {
 
   const { ocean, oceanBase, oceanPhases, crate } = cinemaSet.userData;
   ocean.material.uniforms.uTime.value = elapsed;
+  ocean.material.uniforms.uCameraPosition.value.copy(camera.position);
   const positionAttribute = ocean.geometry.attributes.position;
   const positions = positionAttribute.array;
   for (let i = 0; i < positionAttribute.count; i += 1) {
