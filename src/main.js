@@ -61,7 +61,7 @@ const fanScale = 4 / 3;
 
 const translations = {
   en: {
-    "ui.title": "KANA Star Cinema",
+    "ui.title": "Outdoor Cinema",
     "ui.hero": "Start",
     "ui.performance": "Fan",
     "ui.docs": "Night",
@@ -101,7 +101,7 @@ const translations = {
     "status.fanOff": "Fan off",
     "status.fanHidden": "Fan hidden, wind still on",
     "status.fanShown": "Fan visible",
-    "source.brand": "KANA Star Cinema",
+    "source.brand": "Outdoor Cinema",
     "source.nav.overview": "Start",
     "source.nav.performance": "Fan",
     "source.nav.docs": "Night",
@@ -123,7 +123,7 @@ const translations = {
     "performance.featureB.body": "Use Reset fan if the fan moves out of view or you want to return to the balanced starting point.",
     "docs.eyebrow": "Night cinema",
     "docs.title": "Open-air screen",
-    "docs.lead": "Turn on Night cinema for a brighter moon, a softer ocean, a wooden boat, and two seagulls holding the curtain.",
+    "docs.lead": "Turn on Night cinema for a brighter moon, rolling ocean waves, a canoe, and two seagulls holding the curtain.",
     "docs.cardA": "Wheel zooms only the camera view.",
     "docs.cardB": "Content scroll moves only the instruction page.",
     "docs.cardC": "Upload again any time to replace the curtain texture.",
@@ -133,7 +133,7 @@ const translations = {
     "docs.linkD": "Moon and sea",
   },
   zh: {
-    "ui.title": "KANA星空影院",
+    "ui.title": "户外影院",
     "ui.hero": "开始",
     "ui.performance": "风扇",
     "ui.docs": "星空",
@@ -173,7 +173,7 @@ const translations = {
     "status.fanOff": "风扇已关闭",
     "status.fanHidden": "风扇已隐藏，风继续吹",
     "status.fanShown": "风扇已显示",
-    "source.brand": "KANA星空影院",
+    "source.brand": "户外影院",
     "source.nav.overview": "开始",
     "source.nav.performance": "风扇",
     "source.nav.docs": "星空",
@@ -193,9 +193,9 @@ const translations = {
     "performance.featureA.body": "拖动风扇身上的红、绿、蓝 3D 箭头，就能一次沿一个轴移动风扇。",
     "performance.featureB.title": "重置位置",
     "performance.featureB.body": "风扇移出视野或想回到平衡起点时，点击重置风扇。",
-    "docs.eyebrow": "星空影院",
+    "docs.eyebrow": "户外影院",
     "docs.title": "露天电影屏幕",
-    "docs.lead": "开启星空影院后，月亮更明亮，海面更柔和，小木船随潮汐摇摆，两只海鸥衔着幕布。",
+    "docs.lead": "开启星空影院后，月亮更明亮，海浪重新起伏，独木舟随潮汐摇摆，两只海鸥衔着幕布。",
     "docs.cardA": "滚轮只负责缩放视角。",
     "docs.cardB": "内容滚动只移动幕布说明页。",
     "docs.cardC": "随时再次上传，替换幕布画面。",
@@ -205,7 +205,7 @@ const translations = {
     "docs.linkD": "月亮海面",
   },
   ja: {
-    "ui.title": "KANA星空シネマ",
+    "ui.title": "屋外シネマ",
     "ui.hero": "開始",
     "ui.performance": "扇風機",
     "ui.docs": "星空",
@@ -245,7 +245,7 @@ const translations = {
     "status.fanOff": "扇風機オフ",
     "status.fanHidden": "扇風機を隠しました。風は継続中",
     "status.fanShown": "扇風機を表示",
-    "source.brand": "KANA星空シネマ",
+    "source.brand": "屋外シネマ",
     "source.nav.overview": "開始",
     "source.nav.performance": "扇風機",
     "source.nav.docs": "星空",
@@ -267,7 +267,7 @@ const translations = {
     "performance.featureB.body": "見失った時や初期位置に戻したい時は、扇風機リセットを使います。",
     "docs.eyebrow": "星空シネマ",
     "docs.title": "屋外映画スクリーン",
-    "docs.lead": "星空シネマをオンにすると、明るい月、なめらかな海、小さな木の船、スクリーンをくわえる二羽のカモメが現れます。",
+    "docs.lead": "星空シネマをオンにすると、明るい月、揺れる波、カヌー、スクリーンをくわえる二羽のカモメが現れます。",
     "docs.cardA": "ホイールは視点ズームだけを操作します。",
     "docs.cardB": "内容スクロールは説明ページだけを動かします。",
     "docs.cardC": "いつでも再アップロードして映像を差し替えられます。",
@@ -1167,23 +1167,26 @@ function createCinemaSet() {
     color: 0x1c5a82,
     emissive: 0x061b30,
     emissiveIntensity: 0.2,
-    roughness: 0.42,
-    metalness: 0.02,
-    clearcoat: 0.32,
-    clearcoatRoughness: 0.38,
-    envMapIntensity: 0.52,
+    roughness: 0.24,
+    metalness: 0.06,
+    clearcoat: 0.58,
+    clearcoatRoughness: 0.18,
+    envMapIntensity: 0.82,
     side: THREE.FrontSide,
   });
   const ocean = new THREE.Mesh(oceanGeometry, oceanMaterial);
   ocean.rotation.x = -Math.PI / 2;
   ocean.position.set(0, -2.84, 5.2);
   ocean.receiveShadow = true;
+  const rippleLines = createOceanRippleLines();
+  ocean.add(rippleLines);
+  ocean.userData.rippleLines = rippleLines;
   group.add(ocean);
 
   const boat = createBoat();
-  boat.position.set(-2.18, -2.44, 2.8);
+  boat.position.set(-2.45, -2.25, 1.28);
   boat.scale.setScalar(1.08);
-  boat.rotation.y = -0.18;
+  boat.rotation.y = -0.28;
   boat.userData.baseY = boat.position.y;
   group.add(boat);
 
@@ -1192,45 +1195,132 @@ function createCinemaSet() {
   return group;
 }
 
+function createOceanRippleLines() {
+  const group = new THREE.Group();
+  const material = new THREE.LineBasicMaterial({
+    color: 0xd7edff,
+    transparent: true,
+    opacity: 0.36,
+    depthWrite: false,
+    fog: false,
+    blending: THREE.AdditiveBlending,
+  });
+  const rows = [-10.5, -7.2, -4.1, -1.3, 1.7, 4.8, 8.2, 11.2];
+  rows.forEach((row, rowIndex) => {
+    const geometry = new THREE.BufferGeometry();
+    const positions = new Float32Array(72 * 3);
+    for (let i = 0; i < 72; i += 1) {
+      const progress = i / 71;
+      const x = THREE.MathUtils.lerp(-20.5, 20.5, progress);
+      const y = row + Math.sin(progress * Math.PI * 2 + rowIndex) * 0.28;
+      positions[i * 3] = x;
+      positions[i * 3 + 1] = y;
+      positions[i * 3 + 2] = 0.02;
+    }
+    geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+    const line = new THREE.Line(geometry, material);
+    line.userData.baseRow = row;
+    line.userData.phase = rowIndex * 0.7;
+    group.add(line);
+  });
+  return group;
+}
+
 function createBoat() {
   const boat = new THREE.Group();
   boat.userData.baseY = -2.28;
 
-  const woodMaterial = new THREE.MeshStandardMaterial({ color: 0x7a4a2a, roughness: 0.68, metalness: 0.02 });
-  const darkWoodMaterial = new THREE.MeshStandardMaterial({ color: 0x3f2518, roughness: 0.78, metalness: 0.02 });
+  const woodMaterial = new THREE.MeshStandardMaterial({ color: 0x8a552f, roughness: 0.62, metalness: 0.02 });
+  const innerMaterial = new THREE.MeshStandardMaterial({ color: 0x5a301e, roughness: 0.76, metalness: 0.02 });
+  const darkWoodMaterial = new THREE.MeshStandardMaterial({ color: 0x2f1b13, roughness: 0.8, metalness: 0.02 });
 
-  const hullShape = new THREE.Shape();
-  hullShape.moveTo(-0.74, 0);
-  hullShape.quadraticCurveTo(0, -0.34, 0.74, 0);
-  hullShape.lineTo(0.54, 0.28);
-  hullShape.quadraticCurveTo(0, 0.36, -0.54, 0.28);
-  hullShape.lineTo(-0.74, 0);
-  const hullGeometry = new THREE.ExtrudeGeometry(hullShape, {
-    depth: 0.5,
-    bevelEnabled: true,
-    bevelSize: 0.035,
-    bevelThickness: 0.025,
-    bevelSegments: 2,
-  });
-  hullGeometry.center();
+  const hullGeometry = createCanoeHullGeometry();
   const hull = new THREE.Mesh(hullGeometry, woodMaterial);
   hull.castShadow = true;
   hull.receiveShadow = true;
   boat.add(hull);
 
-  const rim = new THREE.Mesh(new THREE.BoxGeometry(1.16, 0.055, 0.58), darkWoodMaterial);
-  rim.position.y = 0.18;
-  rim.castShadow = true;
-  boat.add(rim);
+  const innerGeometry = createCanoeHullGeometry(0.82, 0.7, 0.55);
+  const inner = new THREE.Mesh(innerGeometry, innerMaterial);
+  inner.position.y = 0.035;
+  inner.scale.y = 0.72;
+  inner.castShadow = true;
+  boat.add(inner);
 
-  [-0.32, 0.32].forEach((x) => {
-    const seat = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.06, 0.48), darkWoodMaterial);
-    seat.position.set(x, 0.27, 0);
+  [-1, 1].forEach((side) => {
+    const rim = new THREE.Mesh(new THREE.BoxGeometry(1.72, 0.045, 0.045), darkWoodMaterial);
+    rim.position.set(0, 0.18, side * 0.23);
+    rim.rotation.y = side * 0.08;
+    rim.castShadow = true;
+    boat.add(rim);
+  });
+
+  [-0.42, 0.42].forEach((x) => {
+    const seat = new THREE.Mesh(new THREE.BoxGeometry(0.085, 0.045, 0.45), darkWoodMaterial);
+    seat.position.set(x, 0.24, 0);
     seat.castShadow = true;
     boat.add(seat);
   });
 
+  [-0.98, 0.98].forEach((x) => {
+    const cap = new THREE.Mesh(new THREE.SphereGeometry(0.105, 18, 10), woodMaterial);
+    cap.scale.set(1.45, 0.42, 0.34);
+    cap.position.set(x, 0.05, 0);
+    cap.castShadow = true;
+    boat.add(cap);
+  });
+
   return boat;
+}
+
+function createCanoeHullGeometry(lengthScale = 1, widthScale = 1, heightScale = 1) {
+  const stations = [
+    { x: -1.02, width: 0.025, top: 0.035, keel: -0.06 },
+    { x: -0.68, width: 0.22, top: 0.155, keel: -0.18 },
+    { x: 0, width: 0.31, top: 0.19, keel: -0.25 },
+    { x: 0.68, width: 0.22, top: 0.155, keel: -0.18 },
+    { x: 1.02, width: 0.025, top: 0.035, keel: -0.06 },
+  ];
+  const positions = [];
+  const indices = [];
+
+  stations.forEach((station) => {
+    positions.push(
+      station.x * lengthScale,
+      station.top * heightScale,
+      -station.width * widthScale,
+      station.x * lengthScale,
+      station.top * heightScale,
+      station.width * widthScale,
+      station.x * lengthScale,
+      station.keel * heightScale,
+      0,
+    );
+  });
+
+  for (let i = 0; i < stations.length - 1; i += 1) {
+    const a = i * 3;
+    const b = (i + 1) * 3;
+    indices.push(a, b, b + 2, a, b + 2, a + 2);
+    indices.push(a + 1, a + 2, b + 2, a + 1, b + 2, b + 1);
+  }
+  indices.push(0, 2, 1);
+  const end = (stations.length - 1) * 3;
+  indices.push(end, end + 1, end + 2);
+
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
+  geometry.setIndex(indices);
+  geometry.computeVertexNormals();
+  return geometry;
+}
+
+function getOceanWaveHeight(x, y, elapsed) {
+  return (
+    Math.sin(elapsed * 0.66 + x * 0.36 + y * 0.18) * 0.15 +
+    Math.sin(elapsed * 0.92 - x * 0.2 + y * 0.44) * 0.085 +
+    Math.sin(elapsed * 1.28 + x * 0.72 + y * 0.08) * 0.032
+  );
 }
 
 function addLights() {
@@ -1823,13 +1913,11 @@ function updateCinemaSet(delta, elapsed) {
     const p = i * 3;
     const x = oceanBase[p];
     const y = oceanBase[p + 1];
-    positions[p + 2] =
-      Math.sin(elapsed * 0.72 + x * 0.28 + y * 0.16) * 0.11 +
-      Math.sin(elapsed * 0.54 - x * 0.16 + y * 0.32) * 0.06 +
-      Math.sin(elapsed * 1.16 + x * 0.54 + y * 0.1) * 0.024;
+    positions[p + 2] = getOceanWaveHeight(x, y, elapsed);
   }
   positionAttribute.needsUpdate = true;
   ocean.geometry.computeVertexNormals();
+  updateOceanRippleLines(ocean.userData.rippleLines, elapsed);
 
   const tide = Math.sin(elapsed * 0.82) * 0.08 + Math.sin(elapsed * 1.7 + 0.6) * 0.025;
   boat.position.y = boat.userData.baseY + tide;
@@ -1837,6 +1925,25 @@ function updateCinemaSet(delta, elapsed) {
   boat.rotation.z = Math.sin(elapsed * 1.05) * 0.075;
 
   updateGulls(delta, elapsed);
+}
+
+function updateOceanRippleLines(rippleLines, elapsed) {
+  if (!rippleLines) return;
+
+  rippleLines.children.forEach((line, rowIndex) => {
+    const positionAttribute = line.geometry.attributes.position;
+    const positions = positionAttribute.array;
+    for (let i = 0; i < positionAttribute.count; i += 1) {
+      const p = i * 3;
+      const progress = i / (positionAttribute.count - 1);
+      const x = THREE.MathUtils.lerp(-20.5, 20.5, progress);
+      const y = line.userData.baseRow + Math.sin(progress * Math.PI * 2 + elapsed * 0.35 + line.userData.phase) * 0.34;
+      positions[p] = x + Math.sin(elapsed * 0.18 + rowIndex) * 0.18;
+      positions[p + 1] = y;
+      positions[p + 2] = getOceanWaveHeight(x, y, elapsed) + 0.035;
+    }
+    positionAttribute.needsUpdate = true;
+  });
 }
 
 function updateGulls(delta, elapsed) {
