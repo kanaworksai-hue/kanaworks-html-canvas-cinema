@@ -334,9 +334,9 @@ const clothConfig = {
   rows: 42,
   width: 8.2,
   height: 5.1,
-  stiffness: 0.94,
-  damping: 0.992,
-  gravity: -0.0042,
+  stiffness: 0.9,
+  damping: 0.996,
+  gravity: -0.0028,
   passes: 5,
 };
 
@@ -1564,8 +1564,9 @@ function updateCloth(delta, elapsed) {
       previous[p + 2] = pz;
 
       const verticalBand = Math.sin(v * Math.PI);
-      const freeBand = smoothstep(0.04, 0.34, v);
+      const freeBand = smoothstep(0.02, 0.22, v);
       const lowerBand = Math.max(0, (v - 0.56) / 0.44);
+      const sailBand = freeBand * (0.55 + lowerBand * 0.95);
       const rightBand = smoothstep(0.38, 1, u);
       const leftBand = 1 - smoothstep(0, 0.35, u);
       const rippleScale = THREE.MathUtils.lerp(1, 0.22, clarity);
@@ -1578,30 +1579,30 @@ function updateCloth(delta, elapsed) {
       const fanDistance = Math.hypot(fromFanX * 0.36, fromFanY * 0.55, fromFanZ * 0.72);
       const fanInfluence = 0.44 + smoothstep(7.4, 0.3, fanDistance) * 0.86;
       const fanPower = params.fanEnabled ? params.wind : 0;
-      const wind = fanPower * pulse * fanInfluence * THREE.MathUtils.lerp(1.28, 0.62, clarity);
+      const wind = fanPower * pulse * fanInfluence * THREE.MathUtils.lerp(1.9, 0.88, clarity);
       const fanVectorLength = Math.max(0.7, Math.hypot(fromFanX, fromFanY * 0.7, fromFanZ));
       const fanVectorX = fromFanX / fanVectorLength;
-      const fanVectorZ = (Math.sign(fromFanZ) || (fanLocal.z < 0 ? 1 : -1)) * (0.78 + Math.min(Math.abs(fromFanZ) * 0.12, 0.34));
+      const fanVectorZ = -(Math.sign(fromFanZ) || (fanLocal.z < 0 ? 1 : -1)) * (1 + Math.min(Math.abs(fromFanZ) * 0.16, 0.52));
 
       const targetX =
         original[p] +
-        (windX * 0.36 + fanVectorX * 0.82) * wind * freeBand * (0.32 + rightBand * 0.26) -
+        (windX * 0.36 + fanVectorX * 0.82) * wind * sailBand * (0.32 + rightBand * 0.26) -
         windX * wind * leftBand * lowerBand * 0.12 +
-        broadRipple * wind * freeBand * 0.24;
+        broadRipple * wind * sailBand * 0.34;
       const targetY =
         original[p + 1] -
-        THREE.MathUtils.lerp(0.1, 0.04, clarity) * v * v +
-        freeBand * wind * (0.12 + lowerBand * 0.5) +
-        Math.sin(elapsed * 2.9 + u * 7.2) * freeBand * wind * 0.1;
+        THREE.MathUtils.lerp(0.06, 0.02, clarity) * v * v +
+        sailBand * wind * (0.22 + lowerBand * 0.74) +
+        Math.sin(elapsed * 2.9 + u * 7.2) * sailBand * wind * 0.16;
       const targetZ =
         original[p + 2] +
-        fanVectorZ * wind * freeBand * (0.9 + lowerBand * 0.82) +
-        fineRipple * wind * 1.18 +
-        bottomCurl * wind * 1.22;
+        fanVectorZ * wind * sailBand * (1.22 + lowerBand * 1.25) +
+        fineRipple * wind * 1.8 +
+        bottomCurl * wind * 1.8;
 
-      positions[p] = px + vx * 0.82 + (targetX - px) * 0.058;
-      positions[p + 1] = py + vy * 0.82 + (targetY - py) * 0.058 + clothConfig.gravity * dt;
-      positions[p + 2] = pz + vz * 0.82 + (targetZ - pz) * THREE.MathUtils.lerp(0.082, 0.052, clarity);
+      positions[p] = px + vx * 0.88 + (targetX - px) * 0.072;
+      positions[p + 1] = py + vy * 0.88 + (targetY - py) * 0.076 + clothConfig.gravity * dt;
+      positions[p + 2] = pz + vz * 0.88 + (targetZ - pz) * THREE.MathUtils.lerp(0.12, 0.076, clarity);
 
       if (params.pull && cloth.hovered > -1) {
         const hi = cloth.hovered * 3;
