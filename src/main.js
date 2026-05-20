@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import html2canvas from "html2canvas";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
+import { TransformControls } from "three/examples/jsm/controls/TransformControls.js";
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
 
 const canvas = document.querySelector("#scene");
@@ -20,11 +21,7 @@ const autoplayInput = document.querySelector("#autoplay");
 const fanXInput = document.querySelector("#fan-x");
 const fanYInput = document.querySelector("#fan-y");
 const fanZInput = document.querySelector("#fan-z");
-const fanXSlider = document.querySelector("#fan-x-slider");
-const fanYSlider = document.querySelector("#fan-y-slider");
-const fanZSlider = document.querySelector("#fan-z-slider");
 const fanDirectionInput = document.querySelector("#fan-direction");
-const fanMovePad = document.querySelector("#fan-move-pad");
 const resetFanButton = document.querySelector("#reset-fan");
 const lightDirectionInput = document.querySelector("#light-direction");
 const lightSizeInput = document.querySelector("#light-size");
@@ -36,10 +33,10 @@ const uploadButton = document.querySelector("#upload-button");
 const resetTextureButton = document.querySelector("#reset-texture");
 const modeButtons = [...document.querySelectorAll(".mode-button")];
 const langButtons = [...document.querySelectorAll(".lang-button")];
-const fanPositionInputs = [fanXInput, fanYInput, fanZInput, fanXSlider, fanYSlider, fanZSlider];
+const fanPositionInputs = [fanXInput, fanYInput, fanZInput];
 
 const fanDefaults = {
-  x: 4.95,
+  x: 2,
   y: -1.28,
   z: 1.62,
 };
@@ -85,7 +82,7 @@ const translations = {
     "home.title": "How to use",
     "home.lead": "Upload an image or video, place the fan, then drag the curtain to watch the screen become a physical cinema surface.",
     "home.stepA": "Tap Upload Media to place your own image or video on the curtain.",
-    "home.stepB": "Use the fan controls to change wind, position, and direction.",
+    "home.stepB": "Use the 3D axis arrows to move the fan, then adjust wind and direction in the panel.",
     "home.stepC": "Drag the curtain with the mouse or touch to bend the screen by hand.",
     "performance.eyebrow": "Fan control",
     "performance.title": "Move the wind",
@@ -93,8 +90,8 @@ const translations = {
     "performance.metricA": "Move across the curtain",
     "performance.metricB": "Raise or lower the fan",
     "performance.metricC": "Push it back or forward",
-    "performance.featureA.title": "Arrow sliders",
-    "performance.featureA.body": "The small controller attached to the fan gives fast movement without opening the full control panel.",
+    "performance.featureA.title": "3D axis handles",
+    "performance.featureA.body": "Drag the red, green, and blue 3D arrows attached to the fan to move it on one axis at a time.",
     "performance.featureB.title": "Reset position",
     "performance.featureB.body": "Use Reset fan if the fan moves out of view or you want to return to the balanced starting point.",
     "docs.eyebrow": "Night cinema",
@@ -148,7 +145,7 @@ const translations = {
     "home.title": "使用说明",
     "home.lead": "上传图片或视频，摆放风扇，再拖动幕布，就能看到画面变成一块真实的露天电影屏幕。",
     "home.stepA": "点击上传媒体，把自己的图片或视频放到幕布上。",
-    "home.stepB": "使用风扇控制调整风力、位置和方向。",
+    "home.stepB": "拖动 3D 坐标轴箭头移动风扇，再在面板里调整风力和方向。",
     "home.stepC": "用鼠标或手指拖动幕布，手动弯曲这块屏幕。",
     "performance.eyebrow": "风扇控制",
     "performance.title": "移动风的位置",
@@ -156,8 +153,8 @@ const translations = {
     "performance.metricA": "沿幕布左右移动",
     "performance.metricB": "抬高或降低风扇",
     "performance.metricC": "向后或向前推进",
-    "performance.featureA.title": "箭头滑杆",
-    "performance.featureA.body": "风扇旁的小控制器可以快速移动风扇，不需要打开完整控制面板。",
+    "performance.featureA.title": "3D 坐标轴手柄",
+    "performance.featureA.body": "拖动风扇身上的红、绿、蓝 3D 箭头，就能一次沿一个轴移动风扇。",
     "performance.featureB.title": "重置位置",
     "performance.featureB.body": "风扇移出视野或想回到平衡起点时，点击重置风扇。",
     "docs.eyebrow": "星空影院",
@@ -211,7 +208,7 @@ const translations = {
     "home.title": "使い方",
     "home.lead": "画像や動画をアップロードし、扇風機を配置して、スクリーンをドラッグすると屋外映画の布スクリーンになります。",
     "home.stepA": "メディア追加で画像や動画をスクリーンに置きます。",
-    "home.stepB": "扇風機の風量、位置、向きを調整します。",
+    "home.stepB": "3D 軸矢印で扇風機を動かし、パネルで風量と向きを調整します。",
     "home.stepC": "マウスやタッチでスクリーンをドラッグし、手で曲げます。",
     "performance.eyebrow": "扇風機操作",
     "performance.title": "風を動かす",
@@ -219,8 +216,8 @@ const translations = {
     "performance.metricA": "スクリーンを横切って移動",
     "performance.metricB": "扇風機を上下に移動",
     "performance.metricC": "奥または手前に移動",
-    "performance.featureA.title": "矢印スライダー",
-    "performance.featureA.body": "扇風機に付いた小さな操作パネルで、フル設定を開かずに素早く移動できます。",
+    "performance.featureA.title": "3D 軸ハンドル",
+    "performance.featureA.body": "扇風機に付いた赤、緑、青の 3D 矢印をドラッグして、1 軸ずつ動かせます。",
     "performance.featureB.title": "位置リセット",
     "performance.featureB.body": "見失った時や初期位置に戻したい時は、扇風機リセットを使います。",
     "docs.eyebrow": "星空シネマ",
@@ -296,8 +293,6 @@ const pointerWorld = new THREE.Vector3();
 const dragPlane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
 const dragPoint = new THREE.Vector3();
 const fanDragOffset = new THREE.Vector3();
-const fanPadWorld = new THREE.Vector3();
-const fanPadScreen = new THREE.Vector3();
 const localDragTarget = new THREE.Vector3();
 
 const dragState = {
@@ -337,6 +332,15 @@ const fan = createFan();
 fan.group.position.set(fanDefaults.x, fanDefaults.y, fanDefaults.z);
 fan.group.rotation.y = -Math.PI * 0.5;
 scene.add(fan.group);
+
+const fanTransformControls = new TransformControls(camera, renderer.domElement);
+fanTransformControls.attach(fan.group);
+fanTransformControls.setMode("translate");
+fanTransformControls.setSpace("world");
+fanTransformControls.showX = true;
+fanTransformControls.showY = true;
+fanTransformControls.showZ = true;
+scene.add(fanTransformControls.getHelper());
 
 const floor = createFloor();
 scene.add(floor);
@@ -401,16 +405,26 @@ autoplayInput.addEventListener("change", () => {
 
 fanPositionInputs.forEach((input) => {
   input.addEventListener("input", () => {
-    if (input === fanXInput || input === fanXSlider) {
+    if (input === fanXInput) {
       setFanAxis("x", Number(input.value));
     }
-    if (input === fanYInput || input === fanYSlider) {
+    if (input === fanYInput) {
       setFanAxis("y", Number(input.value));
     }
-    if (input === fanZInput || input === fanZSlider) {
+    if (input === fanZInput) {
       setFanAxis("z", Number(input.value));
     }
   });
+});
+
+fanTransformControls.addEventListener("dragging-changed", (event) => {
+  controls.enabled = !event.value;
+  canvas.classList.toggle("is-dragging", event.value);
+});
+
+fanTransformControls.addEventListener("objectChange", () => {
+  clampFanPosition();
+  syncFanInputs();
 });
 
 fanDirectionInput.addEventListener("input", () => {
@@ -551,6 +565,12 @@ function setFanAxis(axis, value) {
   syncFanInputs();
 }
 
+function clampFanPosition() {
+  fan.group.position.x = THREE.MathUtils.clamp(fan.group.position.x, Number(fanXInput.min), Number(fanXInput.max));
+  fan.group.position.y = THREE.MathUtils.clamp(fan.group.position.y, Number(fanYInput.min), Number(fanYInput.max));
+  fan.group.position.z = THREE.MathUtils.clamp(fan.group.position.z, Number(fanZInput.min), Number(fanZInput.max));
+}
+
 function syncFanInputs() {
   const x = fan.group.position.x.toFixed(2);
   const y = fan.group.position.y.toFixed(2);
@@ -558,9 +578,6 @@ function syncFanInputs() {
   fanXInput.value = x;
   fanYInput.value = y;
   fanZInput.value = z;
-  fanXSlider.value = x;
-  fanYSlider.value = y;
-  fanZSlider.value = z;
 }
 
 function applyFanDirection() {
@@ -573,26 +590,9 @@ function resetFanPosition() {
   setStatus("status.fanReset");
 }
 
-function updateFanMovePad() {
-  fan.group.updateMatrixWorld();
-  fanPadWorld.setFromMatrixPosition(fan.group.matrixWorld);
-  fanPadWorld.y += 1.05;
-  fanPadWorld.project(camera);
-
-  const visible = fanPadScreen.copy(fanPadWorld).z > -1 && fanPadScreen.z < 1;
-  const rawX = (fanPadScreen.x * 0.5 + 0.5) * window.innerWidth;
-  const rawY = (-fanPadScreen.y * 0.5 + 0.5) * window.innerHeight;
-  const padBounds = fanMovePad.getBoundingClientRect();
-  const mobilePadYLimit = window.innerWidth <= 720 ? Math.min(window.innerHeight - 18, 280) : window.innerHeight - 18;
-  const x = THREE.MathUtils.clamp(rawX, padBounds.width / 2 + 12, window.innerWidth - padBounds.width / 2 - 12);
-  const y = THREE.MathUtils.clamp(rawY, padBounds.height + 18, mobilePadYLimit);
-
-  fanMovePad.style.transform = `translate3d(${x}px, ${y}px, 0) translate(-50%, -115%)`;
-  fanMovePad.classList.toggle("is-visible", visible);
-}
-
 function handlePointerDown(event) {
   if (event.button !== 0) return;
+  if (fanTransformControls.axis || fanTransformControls.dragging) return;
   raycaster.setFromCamera(pointer, camera);
 
   const fanHit = raycaster.intersectObject(fan.group, true)[0];
@@ -1448,6 +1448,7 @@ function applyResponsiveLayout() {
     controls.target.set(0, THREE.MathUtils.lerp(-0.06, 0.08, media), 0.4);
     controls.minDistance = THREE.MathUtils.lerp(11, 12, media);
     controls.maxDistance = 24;
+    fanTransformControls.setSize(0.34);
   } else {
     clothRig.scale.setScalar(1);
     clothRig.position.set(0, 0, 0);
@@ -1456,6 +1457,7 @@ function applyResponsiveLayout() {
     controls.target.set(0, 0.15, 0);
     controls.minDistance = 6.3;
     controls.maxDistance = 15.5;
+    fanTransformControls.setSize(0.7);
   }
   camera.updateProjectionMatrix();
 }
@@ -1573,7 +1575,6 @@ function animate() {
   fan.bladeGroup.rotation.z -= delta * (18 + params.wind * 44);
   fan.group.rotation.z = Math.sin(elapsed * 1.5) * 0.025;
   controls.update();
-  updateFanMovePad();
   renderer.render(scene, camera);
   updateFps();
   requestAnimationFrame(animate);

@@ -223,51 +223,8 @@ input {
   font-weight: 700;
 }
 
-.fan-move-pad {
-  position: fixed;
-  top: 0;
-  left: 0;
-  z-index: 6;
-  display: grid;
-  gap: 7px;
-  width: 178px;
-  padding: 9px;
-  border: 1px solid rgba(28, 33, 40, 0.14);
-  border-radius: 8px;
-  color: #18202b;
-  background: rgba(246, 248, 249, 0.84);
-  box-shadow: 0 18px 54px rgba(31, 37, 45, 0.2);
-  opacity: 0;
-  pointer-events: none;
-  backdrop-filter: blur(18px);
-  transition:
-    opacity 160ms ease,
-    border-color 180ms ease,
-    background-color 180ms ease;
-}
-
-.fan-move-pad.is-visible {
-  opacity: 1;
-  pointer-events: auto;
-}
-
-.fan-pad-row {
-  display: grid;
-  grid-template-columns: 18px minmax(0, 1fr) 18px;
-  align-items: center;
-  gap: 6px;
-  min-height: 24px;
-  font-size: 15px;
-  font-weight: 900;
-}
-
-.fan-pad-row input {
-  width: 100%;
-  accent-color: #2567d4;
-}
-
-.fan-move-pad button {
-  min-height: 30px;
+.reset-fan-button {
+  min-height: 34px;
   border: 0;
   border-radius: 6px;
   color: #fff;
@@ -277,13 +234,7 @@ input {
   cursor: pointer;
 }
 
-body.is-night .fan-move-pad {
-  border-color: rgba(180, 202, 255, 0.18);
-  color: #eaf2ff;
-  background: rgba(13, 18, 31, 0.72);
-}
-
-body.is-night .fan-move-pad button {
+body.is-night .reset-fan-button {
   color: #08111f;
   background: #b8d8ff;
 }
@@ -721,27 +672,9 @@ pre {
     background: #b8d8ff;
   }
 
-  .fan-move-pad {
-    width: 152px;
-    gap: 5px;
-    padding: 7px;
-    border-radius: 8px;
-  }
-
-  .fan-pad-row {
-    grid-template-columns: 16px minmax(0, 1fr) 16px;
-    gap: 5px;
-    font-size: 13px;
-  }
-
-  .fan-move-pad button {
-    min-height: 28px;
+  .reset-fan-button {
+    min-height: 34px;
     font-size: 11px;
-  }
-
-  body.mobile-controls-open .fan-move-pad {
-    opacity: 0;
-    pointer-events: none;
   }
 
   body.mobile-controls-open .media-row {
