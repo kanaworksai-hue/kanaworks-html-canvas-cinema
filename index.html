@@ -20,9 +20,14 @@
     <main id="app">
       <canvas id="scene"></canvas>
 
+      <button id="mobile-controls-toggle" class="mobile-controls-toggle" type="button" aria-expanded="false">
+        <span data-i18n="ui.controls">Controls</span>
+      </button>
+
       <section class="hud" aria-label="Scene controls">
         <div class="hud-row hud-title">
           <span data-i18n="ui.title">HTML in Canvas</span>
+          <button id="mobile-controls-close" class="mobile-controls-close" type="button" aria-label="Close controls">×</button>
           <span id="fps">60 FPS</span>
         </div>
         <div class="segmented language-tabs" role="group" aria-label="Language">

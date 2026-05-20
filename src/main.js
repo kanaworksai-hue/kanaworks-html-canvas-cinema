@@ -6,6 +6,8 @@ import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment
 const canvas = document.querySelector("#scene");
 const htmlSource = document.querySelector("#html-source");
 const siteContent = document.querySelector("#site-content");
+const mobileControlsToggle = document.querySelector("#mobile-controls-toggle");
+const mobileControlsClose = document.querySelector("#mobile-controls-close");
 const fpsLabel = document.querySelector("#fps");
 const statusText = document.querySelector("#status-text");
 const windInput = document.querySelector("#wind");
@@ -52,6 +54,7 @@ const translations = {
     "ui.lightStrength": "Strength",
     "ui.lightRange": "Range",
     "ui.starGlow": "Star glow",
+    "ui.controls": "Controls",
     "status.html": "Live HTML texture",
     "status.media": "Media texture",
     "status.video": "Video texture",
@@ -111,6 +114,7 @@ const translations = {
     "ui.lightStrength": "强弱",
     "ui.lightRange": "范围",
     "ui.starGlow": "星光浪漫度",
+    "ui.controls": "控制",
     "status.html": "实时 HTML 纹理",
     "status.media": "媒体纹理",
     "status.video": "视频纹理",
@@ -170,6 +174,7 @@ const translations = {
     "ui.lightStrength": "強さ",
     "ui.lightRange": "範囲",
     "ui.starGlow": "星の輝き",
+    "ui.controls": "操作",
     "status.html": "ライブ HTML テクスチャ",
     "status.media": "メディアテクスチャ",
     "status.video": "動画テクスチャ",
@@ -410,6 +415,14 @@ resetTextureButton.addEventListener("click", () => {
   resetToHtmlTexture();
 });
 
+mobileControlsToggle.addEventListener("click", () => {
+  setMobileControlsOpen(!document.body.classList.contains("mobile-controls-open"));
+});
+
+mobileControlsClose.addEventListener("click", () => {
+  setMobileControlsOpen(false);
+});
+
 modeButtons.forEach((button) => {
   button.addEventListener("click", () => {
     setPage(button.dataset.page);
@@ -448,6 +461,11 @@ function t(key) {
 function setStatus(key) {
   statusKey = key;
   statusText.textContent = t(key);
+}
+
+function setMobileControlsOpen(open) {
+  document.body.classList.toggle("mobile-controls-open", open);
+  mobileControlsToggle.setAttribute("aria-expanded", String(open));
 }
 
 function applyLanguage(lang) {
