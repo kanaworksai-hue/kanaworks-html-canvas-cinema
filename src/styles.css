@@ -68,7 +68,7 @@ input {
 }
 
 .hud-row,
-.media-row,
+.top-actions,
 .control-line,
 .toggle-line {
   display: flex;
@@ -96,22 +96,16 @@ input {
   font-weight: 600;
 }
 
-.segmented {
+.top-actions {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 4px;
   padding: 4px;
   border-radius: 8px;
   background: rgba(24, 29, 36, 0.08);
 }
 
-.language-tabs {
-  grid-template-columns: repeat(3, 1fr);
-}
-
-.mode-button,
-.lang-button,
-.media-row button {
+.panel-button {
   min-width: 0;
   min-height: 34px;
   border: 0;
@@ -123,17 +117,7 @@ input {
   cursor: pointer;
 }
 
-.media-row {
-  gap: 8px;
-}
-
-.media-row button {
-  flex: 1;
-  background: rgba(24, 29, 36, 0.08);
-  color: #343a44;
-}
-
-.media-row input {
+.top-actions input {
   position: absolute;
   width: 1px;
   height: 1px;
@@ -141,8 +125,7 @@ input {
   pointer-events: none;
 }
 
-.mode-button.is-active,
-.lang-button.is-active {
+.panel-button.is-active {
   color: #101319;
   background: rgba(255, 255, 255, 0.9);
   box-shadow: 0 1px 2px rgba(25, 28, 34, 0.12);
@@ -307,24 +290,17 @@ body.is-night #fps {
   color: #f3f7ff;
 }
 
-body.is-night .segmented {
+body.is-night .top-actions {
   background: rgba(255, 255, 255, 0.12);
 }
 
-body.is-night .mode-button,
-body.is-night .lang-button {
+body.is-night .panel-button {
   color: #cbd8ee;
 }
 
-body.is-night .mode-button.is-active,
-body.is-night .lang-button.is-active {
+body.is-night .panel-button.is-active {
   color: #08111f;
   background: rgba(255, 255, 255, 0.94);
-}
-
-body.is-night .media-row button {
-  color: #eef5ff;
-  background: rgba(255, 255, 255, 0.16);
 }
 
 body.is-night .coordinate-grid input {
@@ -721,7 +697,7 @@ pre {
     background: rgba(245, 249, 255, 0.9);
   }
 
-  body.is-night.mobile-controls-open .media-row {
+  body.is-night.mobile-controls-open .top-actions {
     border-bottom-color: rgba(205, 224, 255, 0.24);
     background: rgba(8, 13, 26, 0.96);
   }
@@ -731,7 +707,7 @@ pre {
     font-size: 11px;
   }
 
-  body.mobile-controls-open .media-row {
+  body.mobile-controls-open .top-actions {
     position: sticky;
     top: 0;
     left: auto;
@@ -744,20 +720,21 @@ pre {
     background: rgba(246, 248, 249, 0.92);
   }
 
-  body.mobile-controls-open .media-row button {
-    flex: 1;
+  body.mobile-controls-open .panel-button {
     min-height: 38px;
     color: #343a44;
     background: rgba(24, 29, 36, 0.08);
   }
 
-  body.is-night.mobile-controls-open .media-row button {
+  body.is-night.mobile-controls-open .panel-button {
     color: #f5f9ff;
     background: rgba(255, 255, 255, 0.16);
   }
 
-  body.mobile-controls-open .media-row #reset-texture {
-    display: inline-flex;
+  body.mobile-controls-open .panel-button.is-active,
+  body.is-night.mobile-controls-open .panel-button.is-active {
+    color: #08111f;
+    background: rgba(255, 255, 255, 0.94);
   }
 
   .hud {
@@ -843,11 +820,11 @@ pre {
     width: min(45vw, 172px);
   }
 
-  .segmented {
+  .top-actions {
     min-height: 34px;
   }
 
-  .media-row button {
+  .panel-button {
     min-height: 34px;
   }
 }

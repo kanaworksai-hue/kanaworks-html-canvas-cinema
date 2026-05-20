@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>KANA Star Cinema</title>
     <link rel="icon" href="data:," />
-    <link rel="stylesheet" href="src/styles.css?v=20260520-true-fan-wind" />
+    <link rel="stylesheet" href="src/styles.css?v=20260520-cycle-top-ui" />
     <script type="importmap">
       {
         "imports": {
@@ -33,19 +33,14 @@
           <button id="mobile-controls-close" class="mobile-controls-close" type="button" aria-label="Close controls">×</button>
           <span id="fps">60 FPS</span>
         </div>
-        <div class="segmented language-tabs" role="group" aria-label="Language">
-          <button class="lang-button is-active" type="button" data-lang="en">EN</button>
-          <button class="lang-button" type="button" data-lang="zh">中文</button>
-          <button class="lang-button" type="button" data-lang="ja">日本語</button>
-        </div>
-        <div class="segmented" role="group" aria-label="Page texture">
-          <button class="mode-button is-active" type="button" data-page="home" data-i18n="ui.hero">Hero</button>
-          <button class="mode-button" type="button" data-page="performance" data-i18n="ui.performance">Performance</button>
-          <button class="mode-button" type="button" data-page="docs" data-i18n="ui.docs">Docs</button>
-        </div>
-        <div class="media-row">
-          <button id="upload-button" type="button" data-i18n="ui.upload">Upload Media</button>
-          <button id="reset-texture" type="button" data-i18n="ui.reset">HTML</button>
+        <div class="top-actions">
+          <button id="language-cycle" class="panel-button" type="button" aria-label="Language">EN</button>
+          <button id="page-cycle" class="panel-button" type="button" aria-label="Guide page">Start</button>
+          <button id="upload-button" class="panel-button" type="button" data-i18n="ui.upload">Upload Media</button>
+          <button id="night-toggle" class="panel-button" type="button" aria-pressed="false" data-i18n="ui.night">
+            Night cinema
+          </button>
+          <input id="night" type="checkbox" />
           <input id="media-upload" type="file" accept="image/*,video/*" />
         </div>
         <label class="toggle-line">
@@ -63,10 +58,6 @@
         <label class="toggle-line">
           <span data-i18n="ui.pull">Cursor pull</span>
           <input id="pull" type="checkbox" checked />
-        </label>
-        <label class="toggle-line">
-          <span data-i18n="ui.night">Night cinema</span>
-          <input id="night" type="checkbox" />
         </label>
         <div class="control-group">
           <div class="group-title" data-i18n="ui.contentControls">Curtain content</div>
@@ -227,6 +218,6 @@
         </div>
       </article>
     </main>
-    <script type="module" src="src/main.js?v=20260520-true-fan-wind"></script>
+    <script type="module" src="src/main.js?v=20260520-cycle-top-ui"></script>
   </body>
 </html>

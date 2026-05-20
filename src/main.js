@@ -12,6 +12,9 @@ const mobileControlsClose = document.querySelector("#mobile-controls-close");
 const mobileUploadButton = document.querySelector("#mobile-upload-button");
 const fpsLabel = document.querySelector("#fps");
 const statusText = document.querySelector("#status-text");
+const languageCycleButton = document.querySelector("#language-cycle");
+const pageCycleButton = document.querySelector("#page-cycle");
+const nightToggleButton = document.querySelector("#night-toggle");
 const windInput = document.querySelector("#wind");
 const foilInput = document.querySelector("#foil");
 const pullInput = document.querySelector("#pull");
@@ -32,10 +35,20 @@ const lightRangeInput = document.querySelector("#light-range");
 const starGlowInput = document.querySelector("#star-glow");
 const uploadInput = document.querySelector("#media-upload");
 const uploadButton = document.querySelector("#upload-button");
-const resetTextureButton = document.querySelector("#reset-texture");
-const modeButtons = [...document.querySelectorAll(".mode-button")];
-const langButtons = [...document.querySelectorAll(".lang-button")];
 const fanPositionInputs = [fanXInput, fanYInput, fanZInput];
+
+const languageOrder = ["en", "zh", "ja"];
+const languageLabels = {
+  en: "EN",
+  zh: "中文",
+  ja: "日本語",
+};
+const pageOrder = ["home", "performance", "docs"];
+const pageLabelKeys = {
+  home: "ui.hero",
+  performance: "ui.performance",
+  docs: "ui.docs",
+};
 
 const fanDefaults = {
   x: 2,
@@ -435,6 +448,12 @@ nightInput.addEventListener("change", () => {
   applyNightMode();
 });
 
+nightToggleButton.addEventListener("click", () => {
+  params.night = !params.night;
+  nightInput.checked = params.night;
+  applyNightMode();
+});
+
 fanEnabledInput.addEventListener("change", () => {
   params.fanEnabled = fanEnabledInput.checked;
   applyFanEnabled(true);
@@ -493,10 +512,9 @@ boatLightInput.addEventListener("change", () => {
   });
 });
 
-langButtons.forEach((button) => {
-  button.addEventListener("click", () => {
-    applyLanguage(button.dataset.lang);
-  });
+languageCycleButton.addEventListener("click", () => {
+  const nextIndex = (languageOrder.indexOf(params.lang) + 1) % languageOrder.length;
+  applyLanguage(languageOrder[nextIndex]);
 });
 
 uploadButton.addEventListener("click", () => {
@@ -512,10 +530,6 @@ uploadInput.addEventListener("change", () => {
   if (file) setMediaFile(file);
 });
 
-resetTextureButton.addEventListener("click", () => {
-  resetToHtmlTexture();
-});
-
 resetFanButton.addEventListener("click", () => {
   resetFanPosition();
 });
@@ -528,10 +542,9 @@ mobileControlsClose.addEventListener("click", () => {
   setMobileControlsOpen(false);
 });
 
-modeButtons.forEach((button) => {
-  button.addEventListener("click", () => {
-    setPage(button.dataset.page);
-  });
+pageCycleButton.addEventListener("click", () => {
+  const nextIndex = (pageOrder.indexOf(params.page) + 1) % pageOrder.length;
+  setPage(pageOrder[nextIndex]);
 });
 
 canvas.addEventListener("pointerdown", (event) => {
@@ -573,15 +586,22 @@ function setMobileControlsOpen(open) {
   mobileControlsToggle.setAttribute("aria-expanded", String(open));
 }
 
+function syncTopButtons() {
+  languageCycleButton.textContent = languageLabels[params.lang];
+  pageCycleButton.textContent = t(pageLabelKeys[params.page]);
+  nightToggleButton.classList.toggle("is-active", params.night);
+  nightToggleButton.setAttribute("aria-pressed", String(params.night));
+}
+
 function applyLanguage(lang) {
   params.lang = lang;
   document.documentElement.lang = lang;
   document.title = t("ui.title");
-  langButtons.forEach((button) => button.classList.toggle("is-active", button.dataset.lang === lang));
   document.querySelectorAll("[data-i18n]").forEach((element) => {
     element.textContent = t(element.dataset.i18n);
   });
   statusText.textContent = t(statusKey);
+  syncTopButtons();
   if (params.textureSource === "html") {
     scheduleTextureRefresh("status.capture");
   }
@@ -1305,7 +1325,7 @@ function setPage(page) {
   setContentScroll(0, false);
   document.querySelectorAll(".page-view").forEach((view) => view.classList.remove("is-visible"));
   document.querySelector(`.view-${page}`).classList.add("is-visible");
-  modeButtons.forEach((button) => button.classList.toggle("is-active", button.dataset.page === page));
+  syncTopButtons();
   scheduleTextureRefresh("status.capture");
 }
 
@@ -1801,6 +1821,8 @@ function applyResponsiveLayout() {
 }
 
 function applyNightMode() {
+  nightInput.checked = params.night;
+  syncTopButtons();
   document.body.classList.toggle("is-night", params.night);
   stars.points.visible = params.night;
   stars.moon.visible = params.night;
