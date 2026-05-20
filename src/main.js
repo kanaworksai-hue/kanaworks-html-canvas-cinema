@@ -8,6 +8,7 @@ const htmlSource = document.querySelector("#html-source");
 const siteContent = document.querySelector("#site-content");
 const mobileControlsToggle = document.querySelector("#mobile-controls-toggle");
 const mobileControlsClose = document.querySelector("#mobile-controls-close");
+const mobileUploadButton = document.querySelector("#mobile-upload-button");
 const fpsLabel = document.querySelector("#fps");
 const statusText = document.querySelector("#status-text");
 const windInput = document.querySelector("#wind");
@@ -403,6 +404,10 @@ langButtons.forEach((button) => {
 });
 
 uploadButton.addEventListener("click", () => {
+  uploadInput.click();
+});
+
+mobileUploadButton.addEventListener("click", () => {
   uploadInput.click();
 });
 
