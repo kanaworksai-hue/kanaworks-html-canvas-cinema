@@ -1215,10 +1215,37 @@ function createOceanMaterial() {
       varying float vWave;
       varying vec3 vWorldPosition;
 
+      float hash(vec2 p) {
+        return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
+      }
+
+      float noise(vec2 p) {
+        vec2 i = floor(p);
+        vec2 f = fract(p);
+        vec2 u = f * f * (3.0 - 2.0 * f);
+        return mix(
+          mix(hash(i), hash(i + vec2(1.0, 0.0)), u.x),
+          mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), u.x),
+          u.y
+        );
+      }
+
       float waveBand(vec2 uv, float scale, float speed, float bend) {
-        float drift = sin(uv.x * bend + uTime * speed) * 0.035;
-        float line = sin((uv.y + drift) * scale + sin(uv.x * 18.0) * 1.2 - uTime * speed);
-        return smoothstep(0.72, 1.0, line * 0.5 + 0.5);
+        float drift = sin(uv.x * bend + uTime * speed) * 0.028;
+        float line = sin((uv.y + drift) * scale + sin(uv.x * 17.0) * 1.1 - uTime * speed);
+        return smoothstep(0.82, 1.0, line * 0.5 + 0.5);
+      }
+
+      float brokenGlint(vec2 uv, float angle, float scale, float speed) {
+        vec2 dir = vec2(cos(angle), sin(angle));
+        vec2 normal = vec2(-dir.y, dir.x);
+        float along = dot(uv, dir);
+        float across = dot(uv, normal);
+        float flow = sin(across * scale + sin(along * 15.0 + uTime * speed) * 1.7 + uTime * speed);
+        float streak = smoothstep(0.88, 1.0, flow * 0.5 + 0.5);
+        float breakMask = smoothstep(0.34, 0.86, noise(vec2(along * 22.0 + uTime * 0.42, across * 4.0)));
+        float shimmer = smoothstep(0.45, 1.0, noise(uv * 34.0 + vec2(uTime * 0.7, -uTime * 0.38)));
+        return streak * breakMask * shimmer;
       }
 
       void main() {
@@ -1226,18 +1253,21 @@ function createOceanMaterial() {
         vec3 color = mix(uShallow, uMid, depth);
         color = mix(color, uDeep, smoothstep(0.58, 1.0, depth) * 0.55);
 
-        float largeFoam = waveBand(vUv, 42.0, 1.25, 8.0);
-        float fineFoam = waveBand(vUv + vec2(0.13, 0.08), 96.0, 2.05, 16.0) * 0.42;
+        float largeFoam = waveBand(vUv, 36.0, 1.18, 8.0);
+        float fineFoam = waveBand(vUv + vec2(0.13, 0.08), 88.0, 1.85, 16.0) * 0.28;
         float crest = smoothstep(0.035, 0.19, vWave);
         float trough = smoothstep(0.08, -0.16, vWave) * 0.18;
-        float foam = clamp((largeFoam * 0.46 + fineFoam) * (0.28 + crest * 1.4) + trough, 0.0, 0.82);
+        float foam = clamp((largeFoam * 0.32 + fineFoam) * (0.22 + crest * 1.18) + trough, 0.0, 0.66);
 
-        float causticA = sin((vWorldPosition.x + vWorldPosition.z) * 5.2 + uTime * 1.4);
-        float causticB = sin((vWorldPosition.x * 0.6 - vWorldPosition.z) * 7.5 - uTime * 1.1);
-        float caustic = smoothstep(0.48, 1.0, causticA * causticB * 0.5 + 0.5);
-        color += caustic * vec3(0.08, 0.2, 0.22) * (1.0 - depth);
-        color = mix(color, uFoam, foam);
-        color += crest * vec3(0.08, 0.18, 0.2);
+        vec2 worldUv = vWorldPosition.xz * 0.055;
+        float glintA = brokenGlint(worldUv + vec2(0.0, uTime * 0.025), 0.34, 74.0, 1.75);
+        float glintB = brokenGlint(worldUv * 1.26 + vec2(0.21, -0.08), -0.18, 112.0, 2.2) * 0.58;
+        float glintC = brokenGlint(worldUv * 0.82 + vec2(-0.1, 0.18), 0.62, 48.0, 1.25) * 0.42;
+        float glint = clamp((glintA + glintB + glintC) * (0.25 + crest * 1.25), 0.0, 1.0);
+
+        color += glint * vec3(0.32, 0.75, 0.9) * (0.46 + (1.0 - depth) * 0.55);
+        color = mix(color, uFoam, foam * 0.82);
+        color += crest * vec3(0.1, 0.22, 0.24) + glint * vec3(0.35, 0.52, 0.46);
 
         gl_FragColor = vec4(color, 1.0);
       }
