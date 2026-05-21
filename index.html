@@ -1,11 +1,11 @@
 <!doctype html>
-<html lang="en">
+<html lang="ja">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Outdoor Cinema</title>
     <link rel="icon" href="data:," />
-    <link rel="stylesheet" href="src/styles.css?v=20260521-seascape-water" />
+    <link rel="stylesheet" href="src/styles.css?v=20260521-local-controls-f" />
     <script>
       if (window.location.protocol === "file:") {
         window.location.replace("http://127.0.0.1:5173/");
@@ -26,6 +26,7 @@
       <canvas id="scene"></canvas>
 
       <button id="mobile-controls-toggle" class="mobile-controls-toggle" type="button" aria-expanded="false">
+        <img src="assets/white-rabbit-icon.png" alt="" />
         <span data-i18n="ui.controls">Controls</span>
       </button>
       <button id="mobile-upload-button" class="mobile-upload-button" type="button">
@@ -39,44 +40,30 @@
           <span id="fps">60 FPS</span>
         </div>
         <div class="top-actions">
-          <button id="language-cycle" class="panel-button" type="button" aria-label="Language">EN</button>
+          <button id="language-cycle" class="panel-button" type="button" aria-label="Language">日本語</button>
           <button id="page-cycle" class="panel-button" type="button" aria-label="Guide page">Start</button>
           <button id="upload-button" class="panel-button" type="button" data-i18n="ui.upload">Upload Media</button>
-          <button id="night-toggle" class="panel-button" type="button" aria-pressed="false" data-i18n="ui.night">
-            Night cinema
+          <button id="night-toggle" class="panel-button" type="button" aria-pressed="true">
+            Blank mode
           </button>
-          <input id="night" type="checkbox" />
-          <input id="media-upload" type="file" accept="image/*,video/*" />
+          <input id="night" type="checkbox" checked />
+          <input id="media-upload" type="file" accept="image/*,video/*,.ppt,.pptx,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation" />
+          <input id="foil" type="hidden" value="1" />
         </div>
-        <label class="toggle-line">
-          <span data-i18n="ui.fanEnabled">Fan</span>
-          <input id="fan-enabled" type="checkbox" checked />
-        </label>
-        <label class="control-line">
-          <span data-i18n="ui.wind">Wind</span>
-          <input id="wind" type="range" min="0" max="1" value="0.72" step="0.01" />
-        </label>
-        <label class="control-line">
-          <span data-i18n="ui.foil">Foil</span>
-          <input id="foil" type="range" min="0" max="1" value="0.42" step="0.01" />
-        </label>
-        <label class="toggle-line">
-          <span data-i18n="ui.pull">Cursor pull</span>
-          <input id="pull" type="checkbox" checked />
-        </label>
-        <div class="control-group">
-          <div class="group-title" data-i18n="ui.contentControls">Curtain content</div>
+        <div class="control-group fan-control-group">
+          <div class="group-title" data-i18n="ui.fanControls">Fan controls</div>
+          <label class="toggle-line">
+            <span data-i18n="ui.fanEnabled">Fan</span>
+            <input id="fan-enabled" type="checkbox" checked />
+          </label>
           <label class="control-line">
-            <span data-i18n="ui.contentScroll">Content scroll</span>
-            <input id="content-scroll" type="range" min="-170" max="46" value="0" step="1" />
+            <span data-i18n="ui.wind">Wind</span>
+            <input id="wind" type="range" min="0" max="2.4" value="0.72" step="0.01" />
           </label>
           <label class="toggle-line">
-            <span data-i18n="ui.autoplay">Auto text</span>
-            <input id="autoplay" type="checkbox" />
+            <span data-i18n="ui.pull">Cursor pull</span>
+            <input id="pull" type="checkbox" checked />
           </label>
-        </div>
-        <div class="control-group">
-          <div class="group-title" data-i18n="ui.fanControls">Fan coordinates</div>
           <div class="coordinate-grid">
             <label>
               <span>X</span>
@@ -99,6 +86,76 @@
             <span data-i18n="ui.fanDirection">Direction</span>
             <input id="fan-direction" type="range" min="-180" max="180" value="-128" step="1" />
           </label>
+        </div>
+        <div class="control-group">
+          <div class="group-title" data-i18n="ui.contentControls">Curtain content</div>
+          <label class="control-line">
+            <span data-i18n="ui.contentScroll">Content scroll</span>
+            <input id="content-scroll" type="range" min="-170" max="46" value="0" step="1" />
+          </label>
+          <label class="toggle-line">
+            <span data-i18n="ui.autoplay">Auto text</span>
+            <input id="autoplay" type="checkbox" />
+          </label>
+          <label class="toggle-line">
+            <span data-i18n="ui.pinBottom">Pin bottom edge</span>
+            <input id="pin-bottom" type="checkbox" />
+          </label>
+          <div class="fan-actions video-actions">
+            <button id="video-play-toggle" class="reset-fan-button" type="button" disabled data-i18n="ui.videoPause">Pause video</button>
+            <button id="video-restart" class="reset-fan-button" type="button" disabled data-i18n="ui.videoRestart">Restart</button>
+            <button id="video-mute-toggle" class="reset-fan-button" type="button" disabled data-i18n="ui.videoMute">Mute</button>
+          </div>
+        </div>
+        <div class="control-group object-controls">
+          <div class="group-title" data-i18n="ui.sceneObjects">Scene objects</div>
+          <label class="control-line">
+            <span data-i18n="ui.selectedObject">Object</span>
+            <select id="object-select">
+              <option value="gullLeft" data-i18n="ui.gullLeft">Left gull</option>
+              <option value="gullRight" data-i18n="ui.gullRight">Right gull</option>
+              <option value="crate" data-i18n="ui.crate">Wooden crate</option>
+            </select>
+          </label>
+          <label class="toggle-line">
+            <span data-i18n="ui.objectVisible">Show object</span>
+            <input id="object-visible" type="checkbox" checked />
+          </label>
+          <div class="coordinate-grid">
+            <label>
+              <span>X</span>
+              <input id="object-x" type="number" min="-8" max="8" value="0" step="0.1" />
+            </label>
+            <label>
+              <span>Y</span>
+              <input id="object-y" type="number" min="-4" max="5" value="0" step="0.1" />
+            </label>
+            <label>
+              <span>Z</span>
+              <input id="object-z" type="number" min="-4" max="8" value="0" step="0.1" />
+            </label>
+          </div>
+          <div class="coordinate-grid">
+            <label>
+              <span>RX</span>
+              <input id="object-rx" type="number" min="-180" max="180" value="0" step="1" />
+            </label>
+            <label>
+              <span>RY</span>
+              <input id="object-ry" type="number" min="-180" max="180" value="0" step="1" />
+            </label>
+            <label>
+              <span>RZ</span>
+              <input id="object-rz" type="number" min="-180" max="180" value="0" step="1" />
+            </label>
+          </div>
+          <label class="control-line">
+            <span data-i18n="ui.objectScale">Scale</span>
+            <input id="object-scale" type="range" min="0.35" max="2.6" value="1" step="0.01" />
+          </label>
+          <div class="fan-actions">
+            <button id="reset-object" class="reset-fan-button" type="button" data-i18n="ui.resetObject">Reset object</button>
+          </div>
         </div>
         <div class="control-group moon-controls">
           <div class="group-title" data-i18n="ui.moonControls">Moon</div>
@@ -124,12 +181,35 @@
             <span data-i18n="ui.moonHaloRange">Halo range</span>
             <input id="moon-halo-range" type="range" min="0.5" max="2.6" value="1.35" step="0.01" />
           </label>
+          <div class="subgroup-title" data-i18n="ui.starControls">Stars</div>
+          <div class="coordinate-grid moon-color-grid">
+            <label>
+              <span data-i18n="ui.starColor">Star color</span>
+              <input id="star-color" type="color" value="#edf4ff" />
+            </label>
+          </div>
+          <label class="control-line">
+            <span data-i18n="ui.starSpeed">Star movement</span>
+            <input id="star-speed" type="range" min="0" max="3" value="1.35" step="0.01" />
+          </label>
+          <label class="control-line">
+            <span data-i18n="ui.starSize">Star size</span>
+            <input id="star-size" type="range" min="0.012" max="0.11" value="0.063" step="0.001" />
+          </label>
+          <label class="control-line">
+            <span data-i18n="ui.starBrightness">Star brightness</span>
+            <input id="star-brightness" type="range" min="0.15" max="2.2" value="1.35" step="0.01" />
+          </label>
+          <label class="control-line">
+            <span data-i18n="ui.starTwinkle">Star twinkle</span>
+            <input id="star-twinkle" type="range" min="0" max="2.4" value="1.15" step="0.01" />
+          </label>
         </div>
       </section>
 
-      <aside class="creator-card" aria-label="KanaWorks_AI">
-        <img src="assets/kanaworks-ai-logo.jpg" alt="KanaWorks_AI logo" />
-        <div>
+      <aside id="creator-card" class="creator-card" aria-label="KanaWorks_AI">
+        <div class="creator-content">
+          <img src="assets/kanaworks-ai-logo.jpg" alt="KanaWorks_AI logo" />
           <strong>KanaWorks_AI</strong>
           <a href="https://x.com/kanaworks_ai" target="_blank" rel="noopener noreferrer">want more? follow me</a>
         </div>
@@ -224,6 +304,6 @@
         </div>
       </article>
     </main>
-    <script type="module" src="src/main.js?v=20260521-seascape-water"></script>
+    <script type="module" src="src/main.js?v=20260521-local-controls-f"></script>
   </body>
 </html>

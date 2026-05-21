@@ -22,6 +22,7 @@ const nightInput = document.querySelector("#night");
 const fanEnabledInput = document.querySelector("#fan-enabled");
 const contentScrollInput = document.querySelector("#content-scroll");
 const autoplayInput = document.querySelector("#autoplay");
+const pinBottomInput = document.querySelector("#pin-bottom");
 const fanXInput = document.querySelector("#fan-x");
 const fanYInput = document.querySelector("#fan-y");
 const fanZInput = document.querySelector("#fan-z");
@@ -33,11 +34,31 @@ const moonHaloColorInput = document.querySelector("#moon-halo-color");
 const moonBrightnessInput = document.querySelector("#moon-brightness");
 const moonSizeInput = document.querySelector("#moon-size");
 const moonHaloRangeInput = document.querySelector("#moon-halo-range");
+const starColorInput = document.querySelector("#star-color");
+const starSpeedInput = document.querySelector("#star-speed");
+const starSizeInput = document.querySelector("#star-size");
+const starBrightnessInput = document.querySelector("#star-brightness");
+const starTwinkleInput = document.querySelector("#star-twinkle");
+const objectSelect = document.querySelector("#object-select");
+const objectVisibleInput = document.querySelector("#object-visible");
+const objectXInput = document.querySelector("#object-x");
+const objectYInput = document.querySelector("#object-y");
+const objectZInput = document.querySelector("#object-z");
+const objectRxInput = document.querySelector("#object-rx");
+const objectRyInput = document.querySelector("#object-ry");
+const objectRzInput = document.querySelector("#object-rz");
+const objectScaleInput = document.querySelector("#object-scale");
+const resetObjectButton = document.querySelector("#reset-object");
+const videoPlayToggleButton = document.querySelector("#video-play-toggle");
+const videoRestartButton = document.querySelector("#video-restart");
+const videoMuteToggleButton = document.querySelector("#video-mute-toggle");
 const uploadInput = document.querySelector("#media-upload");
 const uploadButton = document.querySelector("#upload-button");
 const fanPositionInputs = [fanXInput, fanYInput, fanZInput];
+const objectPositionInputs = [objectXInput, objectYInput, objectZInput];
+const objectRotationInputs = [objectRxInput, objectRyInput, objectRzInput];
 
-const languageOrder = ["en", "zh", "ja"];
+const languageOrder = ["ja", "en", "zh"];
 const languageLabels = {
   en: "EN",
   zh: "中文",
@@ -73,19 +94,41 @@ const translations = {
     "ui.foil": "Foil",
     "ui.pull": "Cursor pull",
     "ui.night": "Night cinema",
+    "ui.blankMode": "Blank mode",
+    "ui.nightMode": "Night cinema",
     "ui.contentControls": "Curtain content",
     "ui.contentScroll": "Content scroll",
     "ui.autoplay": "Auto text",
-    "ui.fanControls": "Fan coordinates",
+    "ui.pinBottom": "Pin bottom edge",
+    "ui.fanControls": "Fan controls",
     "ui.fanDirection": "Direction",
     "ui.hideFan": "Hide fan",
     "ui.showFan": "Show fan",
+    "ui.sceneObjects": "Scene objects",
+    "ui.selectedObject": "Object",
+    "ui.objectVisible": "Show object",
+    "ui.objectScale": "Scale",
+    "ui.resetObject": "Reset object",
+    "ui.gullLeft": "Left gull",
+    "ui.gullRight": "Right gull",
+    "ui.crate": "Wooden crate",
+    "ui.videoPause": "Pause video",
+    "ui.videoPlay": "Play video",
+    "ui.videoRestart": "Restart",
+    "ui.videoMute": "Mute",
+    "ui.videoUnmute": "Unmute",
     "ui.moonControls": "Moon",
     "ui.moonColor": "Moon color",
     "ui.moonHaloColor": "Halo color",
     "ui.moonBrightness": "Brightness",
     "ui.moonSize": "Size",
     "ui.moonHaloRange": "Halo range",
+    "ui.starControls": "Stars",
+    "ui.starColor": "Star color",
+    "ui.starSpeed": "Star movement",
+    "ui.starSize": "Star size",
+    "ui.starBrightness": "Star brightness",
+    "ui.starTwinkle": "Star twinkle",
     "ui.controls": "Controls",
     "status.html": "Live cinema guide",
     "status.media": "Media texture",
@@ -95,6 +138,8 @@ const translations = {
     "status.fallback": "Fallback texture",
     "status.loading": "Loading media",
     "status.videoSound": "Video with sound",
+    "status.videoPaused": "Video paused",
+    "status.ppt": "PowerPoint texture",
     "status.tapSound": "Tap once to start video sound",
     "status.fanReset": "Fan reset",
     "status.fanOn": "Fan on",
@@ -145,19 +190,41 @@ const translations = {
     "ui.foil": "镀膜",
     "ui.pull": "鼠标牵引",
     "ui.night": "星空影院",
+    "ui.blankMode": "空白模式",
+    "ui.nightMode": "星空影院",
     "ui.contentControls": "幕布内容",
     "ui.contentScroll": "内容滚动",
     "ui.autoplay": "自动播放",
-    "ui.fanControls": "风扇坐标",
+    "ui.pinBottom": "固定幕布下方",
+    "ui.fanControls": "风扇控制",
     "ui.fanDirection": "风向角度",
     "ui.hideFan": "隐藏风扇",
     "ui.showFan": "显示风扇",
+    "ui.sceneObjects": "场景物体",
+    "ui.selectedObject": "物体",
+    "ui.objectVisible": "显示物体",
+    "ui.objectScale": "缩放",
+    "ui.resetObject": "重置物体",
+    "ui.gullLeft": "左海鸥",
+    "ui.gullRight": "右海鸥",
+    "ui.crate": "木箱",
+    "ui.videoPause": "暂停视频",
+    "ui.videoPlay": "继续播放",
+    "ui.videoRestart": "重新播放",
+    "ui.videoMute": "静音",
+    "ui.videoUnmute": "取消静音",
     "ui.moonControls": "月亮",
     "ui.moonColor": "月亮颜色",
     "ui.moonHaloColor": "光晕颜色",
     "ui.moonBrightness": "亮度",
     "ui.moonSize": "大小",
     "ui.moonHaloRange": "光晕范围",
+    "ui.starControls": "星星",
+    "ui.starColor": "星星颜色",
+    "ui.starSpeed": "移动速度",
+    "ui.starSize": "星星大小",
+    "ui.starBrightness": "星星亮度",
+    "ui.starTwinkle": "闪烁强度",
     "ui.controls": "控制",
     "status.html": "实时影院说明",
     "status.media": "媒体纹理",
@@ -167,6 +234,8 @@ const translations = {
     "status.fallback": "备用纹理",
     "status.loading": "正在载入媒体",
     "status.videoSound": "视频有声播放",
+    "status.videoPaused": "视频已暂停",
+    "status.ppt": "PPT 纹理",
     "status.tapSound": "轻点一次开启视频声音",
     "status.fanReset": "风扇已重置",
     "status.fanOn": "风扇已开启",
@@ -217,19 +286,41 @@ const translations = {
     "ui.foil": "箔感",
     "ui.pull": "カーソル牽引",
     "ui.night": "星空シネマ",
+    "ui.blankMode": "空白モード",
+    "ui.nightMode": "星空シネマ",
     "ui.contentControls": "スクリーン内容",
     "ui.contentScroll": "内容スクロール",
     "ui.autoplay": "自動再生",
-    "ui.fanControls": "扇風機座標",
+    "ui.pinBottom": "下端を固定",
+    "ui.fanControls": "扇風機操作",
     "ui.fanDirection": "風向き",
     "ui.hideFan": "扇風機を隠す",
     "ui.showFan": "扇風機を表示",
+    "ui.sceneObjects": "シーン小物",
+    "ui.selectedObject": "小物",
+    "ui.objectVisible": "小物を表示",
+    "ui.objectScale": "拡大縮小",
+    "ui.resetObject": "小物リセット",
+    "ui.gullLeft": "左のカモメ",
+    "ui.gullRight": "右のカモメ",
+    "ui.crate": "木箱",
+    "ui.videoPause": "動画停止",
+    "ui.videoPlay": "動画再生",
+    "ui.videoRestart": "最初から",
+    "ui.videoMute": "ミュート",
+    "ui.videoUnmute": "音を戻す",
     "ui.moonControls": "月",
     "ui.moonColor": "月の色",
     "ui.moonHaloColor": "光輪の色",
     "ui.moonBrightness": "明るさ",
     "ui.moonSize": "大きさ",
     "ui.moonHaloRange": "光輪範囲",
+    "ui.starControls": "星",
+    "ui.starColor": "星の色",
+    "ui.starSpeed": "星の動き",
+    "ui.starSize": "星の大きさ",
+    "ui.starBrightness": "星の明るさ",
+    "ui.starTwinkle": "きらめき",
     "ui.controls": "操作",
     "status.html": "ライブシネマ案内",
     "status.media": "メディアテクスチャ",
@@ -239,6 +330,8 @@ const translations = {
     "status.fallback": "代替テクスチャ",
     "status.loading": "メディア読み込み中",
     "status.videoSound": "音声付き動画",
+    "status.videoPaused": "動画を一時停止",
+    "status.ppt": "PPT テクスチャ",
     "status.tapSound": "一度タップして動画音声を開始",
     "status.fanReset": "扇風機をリセット",
     "status.fanOn": "扇風機オン",
@@ -278,26 +371,34 @@ const translations = {
   },
 };
 
+nightInput.checked = true;
+
 const params = {
   wind: Number(windInput.value),
-  foil: Number(foilInput.value),
+  foil: 1,
   pull: pullInput.checked,
-  night: nightInput.checked,
+  night: true,
   fanEnabled: fanEnabledInput.checked,
   fanVisible: true,
   autoplay: autoplayInput.checked,
-  lang: "en",
+  bottomPinned: pinBottomInput.checked,
+  lang: "ja",
   scroll: Number(contentScrollInput.value),
   fanDirection: Number(fanDirectionInput.value),
-  starGlow: 1.35,
   moonColor: moonColorInput.value,
   moonHaloColor: moonHaloColorInput.value,
   moonBrightness: Number(moonBrightnessInput.value),
   moonSize: Number(moonSizeInput.value),
   moonHaloRange: Number(moonHaloRangeInput.value),
+  starColor: starColorInput.value,
+  starSpeed: Number(starSpeedInput.value),
+  starSize: Number(starSizeInput.value),
+  starBrightness: Number(starBrightnessInput.value),
+  starTwinkle: Number(starTwinkleInput.value),
   page: "home",
   textureSource: "html",
   mediaClarity: 0,
+  selectedObject: "gullLeft",
 };
 
 let statusKey = "status.html";
@@ -359,9 +460,9 @@ const clothConfig = {
   rows: 42,
   width: 8.2,
   height: 5.1,
-  stiffness: 0.9,
-  damping: 0.996,
-  gravity: -0.0028,
+  stiffness: 0.76,
+  damping: 0.993,
+  gravity: -0.0019,
   passes: 5,
 };
 
@@ -413,21 +514,29 @@ scene.add(stars.moonHalo);
 const cinemaSet = createCinemaSet();
 scene.add(cinemaSet);
 
-const lights = addLights();
-applyFanDirection();
-applyFanEnabled(false);
-applyMoonSettings(0);
-applyResponsiveLayout();
-applyNightMode();
+const sceneObjects = {
+  gullLeft: createSceneObjectState(gulls[0], "ui.gullLeft"),
+  gullRight: createSceneObjectState(gulls[1], "ui.gullRight"),
+  crate: createSceneObjectState(cinemaSet.userData.crate, "ui.crate", { floating: true }),
+};
 
+const lights = addLights();
 let refreshTimer = 0;
 let frameCount = 0;
 let lastFpsTime = performance.now();
 let textureBusy = false;
 let lastAutoScrollRefresh = 0;
+let textureRequestId = 0;
 let mediaUrl = "";
 let mediaElement = null;
 let videoTexture = null;
+
+applyFanDirection();
+applyFanEnabled(false);
+syncObjectControls();
+applyMoonSettings(0);
+applyResponsiveLayout();
+applyNightMode();
 
 let pageTexture = createFallbackTexture();
 cloth.material.map = pageTexture;
@@ -441,7 +550,7 @@ windInput.addEventListener("input", () => {
 });
 
 foilInput.addEventListener("input", () => {
-  params.foil = Number(foilInput.value);
+  params.foil = 1;
   refreshMaterial();
 });
 
@@ -478,6 +587,11 @@ autoplayInput.addEventListener("change", () => {
   params.autoplay = autoplayInput.checked;
 });
 
+pinBottomInput.addEventListener("change", () => {
+  params.bottomPinned = pinBottomInput.checked;
+  applyClothPinning(true);
+});
+
 fanPositionInputs.forEach((input) => {
   input.addEventListener("input", () => {
     if (input === fanXInput) {
@@ -507,6 +621,67 @@ fanDirectionInput.addEventListener("input", () => {
   applyFanDirection();
 });
 
+objectSelect.addEventListener("change", () => {
+  params.selectedObject = objectSelect.value;
+  syncObjectControls();
+});
+
+objectVisibleInput.addEventListener("change", () => {
+  const state = getSelectedSceneObject();
+  state.visible = objectVisibleInput.checked;
+  applySceneObjectVisibility();
+});
+
+objectPositionInputs.forEach((input) => {
+  input.addEventListener("input", () => {
+    const axis = input === objectXInput ? "x" : input === objectYInput ? "y" : "z";
+    setSceneObjectPosition(axis, Number(input.value));
+  });
+});
+
+objectRotationInputs.forEach((input) => {
+  input.addEventListener("input", () => {
+    const axis = input === objectRxInput ? "x" : input === objectRyInput ? "y" : "z";
+    setSceneObjectRotation(axis, Number(input.value));
+  });
+});
+
+objectScaleInput.addEventListener("input", () => {
+  const state = getSelectedSceneObject();
+  state.group.scale.setScalar(Number(objectScaleInput.value));
+});
+
+resetObjectButton.addEventListener("click", () => {
+  resetSelectedSceneObject();
+});
+
+videoPlayToggleButton.addEventListener("click", () => {
+  const video = getActiveVideo();
+  if (!video) return;
+  if (video.paused) {
+    video.play().catch(() => setStatus("status.tapSound"));
+  } else {
+    video.pause();
+    setStatus("status.videoPaused");
+  }
+  updateVideoControls();
+});
+
+videoRestartButton.addEventListener("click", () => {
+  const video = getActiveVideo();
+  if (!video) return;
+  video.currentTime = 0;
+  video.play().catch(() => setStatus("status.tapSound"));
+  updateVideoControls();
+});
+
+videoMuteToggleButton.addEventListener("click", () => {
+  const video = getActiveVideo();
+  if (!video) return;
+  video.muted = !video.muted;
+  updateVideoControls();
+});
+
 [moonColorInput, moonHaloColorInput, moonBrightnessInput, moonSizeInput, moonHaloRangeInput].forEach((input) => {
   input.addEventListener("input", () => {
     params.moonColor = moonColorInput.value;
@@ -515,6 +690,16 @@ fanDirectionInput.addEventListener("input", () => {
     params.moonSize = Number(moonSizeInput.value);
     params.moonHaloRange = Number(moonHaloRangeInput.value);
     applyMoonSettings(clock.elapsedTime);
+  });
+});
+
+[starColorInput, starSpeedInput, starSizeInput, starBrightnessInput, starTwinkleInput].forEach((input) => {
+  input.addEventListener("input", () => {
+    params.starColor = starColorInput.value;
+    params.starSpeed = Number(starSpeedInput.value);
+    params.starSize = Number(starSizeInput.value);
+    params.starBrightness = Number(starBrightnessInput.value);
+    params.starTwinkle = Number(starTwinkleInput.value);
   });
 });
 
@@ -543,7 +728,7 @@ window.addEventListener("dragover", (event) => {
 });
 
 window.addEventListener("drop", (event) => {
-  const file = [...(event.dataTransfer?.files || [])].find((item) => item.type.startsWith("image/") || item.type.startsWith("video/"));
+  const file = [...(event.dataTransfer?.files || [])].find((item) => isSupportedMediaFile(item));
   if (!file) return;
   event.preventDefault();
   setMediaFile(file);
@@ -554,11 +739,19 @@ resetFanButton.addEventListener("click", () => {
 });
 
 mobileControlsToggle.addEventListener("click", () => {
-  setMobileControlsOpen(!document.body.classList.contains("mobile-controls-open"));
+  if (window.matchMedia("(max-width: 720px)").matches) {
+    setMobileControlsOpen(!document.body.classList.contains("mobile-controls-open"));
+    return;
+  }
+  setControlsCollapsed(false);
 });
 
 mobileControlsClose.addEventListener("click", () => {
-  setMobileControlsOpen(false);
+  if (window.matchMedia("(max-width: 720px)").matches) {
+    setMobileControlsOpen(false);
+    return;
+  }
+  setControlsCollapsed(true);
 });
 
 pageCycleButton.addEventListener("click", () => {
@@ -605,17 +798,130 @@ function setMobileControlsOpen(open) {
   mobileControlsToggle.setAttribute("aria-expanded", String(open));
 }
 
+function setControlsCollapsed(collapsed) {
+  document.body.classList.toggle("controls-collapsed", collapsed);
+  mobileControlsToggle.setAttribute("aria-expanded", String(!collapsed));
+}
+
 function syncTopButtons() {
   languageCycleButton.textContent = languageLabels[params.lang];
   pageCycleButton.textContent = t(pageLabelKeys[params.page]);
+  nightToggleButton.textContent = t(params.night ? "ui.blankMode" : "ui.nightMode");
   nightToggleButton.classList.toggle("is-active", params.night);
   nightToggleButton.setAttribute("aria-pressed", String(params.night));
   syncFanVisibilityButton();
+  syncObjectControls(false);
+  updateVideoControls();
 }
 
 function syncFanVisibilityButton() {
   fanVisibilityButton.textContent = t(params.fanVisible ? "ui.hideFan" : "ui.showFan");
   fanVisibilityButton.classList.toggle("is-active", !params.fanVisible);
+}
+
+function createSceneObjectState(group, labelKey, options = {}) {
+  const basePosition = group.position.clone();
+  const baseRotation = group.rotation.clone();
+  const state = {
+    group,
+    labelKey,
+    floating: Boolean(options.floating),
+    visible: true,
+    defaults: {
+      position: basePosition.clone(),
+      rotation: baseRotation.clone(),
+      scale: group.scale.x,
+    },
+  };
+  group.userData.controlBasePosition = basePosition;
+  group.userData.controlBaseRotation = baseRotation;
+  if (state.floating) syncFloatingObjectData(state);
+  return state;
+}
+
+function getSelectedSceneObject() {
+  return sceneObjects[params.selectedObject] || sceneObjects.gullLeft;
+}
+
+function syncObjectControls(updateVisibility = true) {
+  if (!objectSelect) return;
+  const state = getSelectedSceneObject();
+  const basePosition = state.group.userData.controlBasePosition || state.group.position;
+  const baseRotation = state.group.userData.controlBaseRotation || state.group.rotation;
+  objectSelect.value = params.selectedObject;
+  objectVisibleInput.checked = state.visible;
+  objectXInput.value = basePosition.x.toFixed(2);
+  objectYInput.value = basePosition.y.toFixed(2);
+  objectZInput.value = basePosition.z.toFixed(2);
+  objectRxInput.value = String(Math.round(THREE.MathUtils.radToDeg(baseRotation.x)));
+  objectRyInput.value = String(Math.round(THREE.MathUtils.radToDeg(baseRotation.y)));
+  objectRzInput.value = String(Math.round(THREE.MathUtils.radToDeg(baseRotation.z)));
+  objectScaleInput.value = state.group.scale.x.toFixed(2);
+  if (updateVisibility) applySceneObjectVisibility();
+}
+
+function setSceneObjectPosition(axis, value) {
+  const state = getSelectedSceneObject();
+  const input = axis === "x" ? objectXInput : axis === "y" ? objectYInput : objectZInput;
+  const basePosition = state.group.userData.controlBasePosition || state.group.position.clone();
+  basePosition[axis] = THREE.MathUtils.clamp(value, Number(input.min), Number(input.max));
+  state.group.userData.controlBasePosition = basePosition;
+  state.group.position[axis] = basePosition[axis];
+  if (state.floating) syncFloatingObjectData(state);
+  syncObjectControls(false);
+}
+
+function setSceneObjectRotation(axis, value) {
+  const state = getSelectedSceneObject();
+  const input = axis === "x" ? objectRxInput : axis === "y" ? objectRyInput : objectRzInput;
+  const baseRotation = state.group.userData.controlBaseRotation || state.group.rotation.clone();
+  baseRotation[axis] = THREE.MathUtils.degToRad(THREE.MathUtils.clamp(value, Number(input.min), Number(input.max)));
+  state.group.userData.controlBaseRotation = baseRotation;
+  state.group.rotation[axis] = baseRotation[axis];
+  syncObjectControls(false);
+}
+
+function resetSelectedSceneObject() {
+  const state = getSelectedSceneObject();
+  const { position, rotation, scale } = state.defaults;
+  state.group.userData.controlBasePosition = position.clone();
+  state.group.userData.controlBaseRotation = rotation.clone();
+  state.group.position.copy(position);
+  state.group.rotation.copy(rotation);
+  state.group.scale.setScalar(scale);
+  state.visible = true;
+  if (state.floating) syncFloatingObjectData(state);
+  syncObjectControls();
+}
+
+function syncFloatingObjectData(state) {
+  const basePosition = state.group.userData.controlBasePosition || state.group.position;
+  const ocean = cinemaSet.userData.ocean;
+  state.group.userData.baseY = basePosition.y;
+  state.group.userData.floatX = basePosition.x - ocean.position.x;
+  state.group.userData.floatZ = ocean.position.z - basePosition.z;
+}
+
+function applySceneObjectVisibility() {
+  Object.values(sceneObjects).forEach((state) => {
+    state.group.visible = params.night && state.visible;
+  });
+}
+
+function getActiveVideo() {
+  return mediaElement instanceof HTMLVideoElement ? mediaElement : null;
+}
+
+function updateVideoControls() {
+  if (!videoPlayToggleButton) return;
+  const video = getActiveVideo();
+  const hasVideo = Boolean(video);
+  [videoPlayToggleButton, videoRestartButton, videoMuteToggleButton].forEach((button) => {
+    button.disabled = !hasVideo;
+  });
+  videoPlayToggleButton.textContent = t(video && !video.paused ? "ui.videoPause" : "ui.videoPlay");
+  videoRestartButton.textContent = t("ui.videoRestart");
+  videoMuteToggleButton.textContent = t(video?.muted ? "ui.videoUnmute" : "ui.videoMute");
 }
 
 function applyLanguage(lang) {
@@ -750,9 +1056,7 @@ function handlePointerMove() {
 
   if (dragState.mode === "fan" && raycaster.ray.intersectPlane(dragPlane, dragPoint)) {
     fan.group.position.copy(dragPoint.add(fanDragOffset));
-    fan.group.position.x = THREE.MathUtils.clamp(fan.group.position.x, -5.6, 5.8);
-    fan.group.position.y = THREE.MathUtils.clamp(fan.group.position.y, -2.15, 2.4);
-    fan.group.position.z = THREE.MathUtils.clamp(fan.group.position.z, 0.2, 3.4);
+    clampFanPosition();
     syncFanInputs();
   }
 
@@ -797,7 +1101,7 @@ function createCloth({ cols, rows, width, height }) {
       writeVec(original, i, px, py, pz);
       uvs[i * 2] = u;
       uvs[i * 2 + 1] = 1 - v;
-      invMass[i] = y === 0 ? 0 : 1;
+      invMass[i] = isPinnedClothVertex(x, y, cols, rows) ? 0 : 1;
       phase[i] = Math.random() * Math.PI * 2;
     }
   }
@@ -864,6 +1168,32 @@ function createCloth({ cols, rows, width, height }) {
   };
 }
 
+function isPinnedClothVertex(x, y, cols, rows) {
+  const topCornerPin = y === 0 && (x <= 2 || x >= cols - 2);
+  const bottomPin = params.bottomPinned && y === rows;
+  return topCornerPin || bottomPin;
+}
+
+function applyClothPinning(resetPinnedVertices = false) {
+  const { cols, rows, invMass, positions, previous, original } = cloth;
+  for (let y = 0; y <= rows; y += 1) {
+    for (let x = 0; x <= cols; x += 1) {
+      const i = y * (cols + 1) + x;
+      const pinned = isPinnedClothVertex(x, y, cols, rows);
+      invMass[i] = pinned ? 0 : 1;
+      if (pinned && resetPinnedVertices) {
+        const p = i * 3;
+        positions[p] = original[p];
+        positions[p + 1] = original[p + 1];
+        positions[p + 2] = original[p + 2];
+        previous[p] = positions[p];
+        previous[p + 1] = positions[p + 1];
+        previous[p + 2] = positions[p + 2];
+      }
+    }
+  }
+}
+
 function createCable(width) {
   const group = new THREE.Group();
   const material = new THREE.MeshStandardMaterial({ color: 0x7d828b, metalness: 0.85, roughness: 0.28 });
@@ -897,20 +1227,19 @@ function createClip(x, y, z, scale = 1) {
   return group;
 }
 
-function createGulls({ width, height }) {
-  const topEdge = height / 2 - 0.015;
+function createGulls() {
   return [
-    createGull(1, -width / 2 + 0.75, topEdge),
-    createGull(-1, width / 2 - 0.75, topEdge),
+    createGull(1, -4, 2.5, 0),
+    createGull(-1, 4, 2.53, 0),
   ];
 }
 
-function createGull(side, x, y) {
+function createGull(side, x, y, z = 0) {
   const group = new THREE.Group();
   const inward = -side;
   const beakTipX = side > 0 ? 0.075 : -0.075;
   const beakTipY = 0.14;
-  group.position.set(x, y, 0.2);
+  group.position.set(x, y, z);
   group.scale.setScalar(0.98);
   group.visible = false;
   group.userData.baseY = y;
@@ -940,19 +1269,19 @@ function createGull(side, x, y) {
   beak.castShadow = true;
   group.add(beak);
 
-  const eye = new THREE.Mesh(new THREE.SphereGeometry(0.012, 8, 8), eyeMaterial);
-  eye.position.set(inward * 0.065 - beakTipX, 0.18 - beakTipY, 0.13);
-  group.add(eye);
+  [-0.064, 0.064].forEach((eyeZ) => {
+    const eye = new THREE.Mesh(new THREE.SphereGeometry(0.0165, 12, 12), eyeMaterial);
+    eye.position.set(head.position.x - inward * 0.072, head.position.y + 0.022, head.position.z + eyeZ);
+    eye.scale.set(1, 1, 0.68);
+    group.add(eye);
+  });
 
-  const wingShape = new THREE.Shape();
-  wingShape.moveTo(0, 0);
-  wingShape.quadraticCurveTo(inward * 0.18, 0.26, inward * 0.62, 0.34);
-  wingShape.quadraticCurveTo(inward * 0.46, 0.06, 0, 0);
-  const wingGeometry = new THREE.ShapeGeometry(wingShape);
-  const leftWing = new THREE.Mesh(wingGeometry, wingMaterial);
-  const rightWing = new THREE.Mesh(wingGeometry, wingMaterial);
-  leftWing.position.set(inward * 0.22 - beakTipX, 0.15 - beakTipY, 0.02);
-  rightWing.position.set(inward * 0.22 - beakTipX, 0.15 - beakTipY, -0.02);
+  const leftWing = new THREE.Mesh(createGullWingGeometry(1, inward), wingMaterial);
+  const rightWing = new THREE.Mesh(createGullWingGeometry(-1, inward), wingMaterial);
+  leftWing.position.set(inward * 0.2 - beakTipX, 0.13 - beakTipY, 0.07);
+  rightWing.position.set(inward * 0.2 - beakTipX, 0.13 - beakTipY, -0.07);
+  leftWing.rotation.y = inward * 0.08;
+  rightWing.rotation.y = inward * 0.08;
   leftWing.castShadow = true;
   rightWing.castShadow = true;
   group.add(leftWing, rightWing);
@@ -960,6 +1289,61 @@ function createGull(side, x, y) {
   group.userData.leftWing = leftWing;
   group.userData.rightWing = rightWing;
   return group;
+}
+
+function createGullWingGeometry(sideZ, inward) {
+  const front = -inward;
+  const tail = inward;
+  const cubic = (a, b, c, d, t) => {
+    const u = 1 - t;
+    return new THREE.Vector3(
+      u ** 3 * a.x + 3 * u ** 2 * t * b.x + 3 * u * t ** 2 * c.x + t ** 3 * d.x,
+      0,
+      u ** 3 * a.z + 3 * u ** 2 * t * b.z + 3 * u * t ** 2 * c.z + t ** 3 * d.z,
+    );
+  };
+  const rootLead = new THREE.Vector3(front * 0.03, 0, sideZ * 0.02);
+  const tip = new THREE.Vector3(tail * 0.02, 0, sideZ * 0.92);
+  const rootTrail = new THREE.Vector3(tail * 0.17, 0, sideZ * 0.1);
+  const outline = [];
+  for (let i = 0; i <= 8; i += 1) {
+    outline.push(
+      cubic(
+        rootLead,
+        new THREE.Vector3(front * 0.24, 0, sideZ * 0.18),
+        new THREE.Vector3(front * 0.16, 0, sideZ * 0.68),
+        tip,
+        i / 8,
+      ),
+    );
+  }
+  for (let i = 1; i <= 8; i += 1) {
+    outline.push(
+      cubic(
+        tip,
+        new THREE.Vector3(tail * 0.17, 0, sideZ * 0.84),
+        new THREE.Vector3(tail * 0.31, 0, sideZ * 0.34),
+        rootTrail,
+        i / 8,
+      ),
+    );
+  }
+  const center = new THREE.Vector3(tail * 0.03, 0, sideZ * 0.39);
+  const vertices = new Float32Array((outline.length + 1) * 3);
+  vertices.set([center.x, center.y, center.z], 0);
+  outline.forEach((point, index) => {
+    vertices.set([point.x, point.y, point.z], (index + 1) * 3);
+  });
+  const indices = [];
+  for (let i = 1; i <= outline.length; i += 1) {
+    const next = i === outline.length ? 1 : i + 1;
+    indices.push(0, i, next);
+  }
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute("position", new THREE.BufferAttribute(vertices, 3));
+  geometry.setIndex(indices);
+  geometry.computeVertexNormals();
+  return geometry;
 }
 
 function createFan() {
@@ -1172,8 +1556,8 @@ function createCinemaSet() {
   group.add(ocean);
 
   const crate = createWoodenCrate();
-  crate.position.set(-2.15, -2.32, 1.38);
-  crate.rotation.y = -0.34;
+  crate.position.set(-2.15, -2.6, 2.4);
+  crate.rotation.set(THREE.MathUtils.degToRad(-3), THREE.MathUtils.degToRad(-19), 0);
   crate.userData.baseY = crate.position.y;
   crate.userData.floatX = crate.position.x - ocean.position.x;
   crate.userData.floatZ = ocean.position.z - crate.position.z;
@@ -1533,7 +1917,23 @@ function resetToHtmlTexture() {
   refreshHtmlTexture();
 }
 
+function isPowerPointFile(file) {
+  const name = file.name.toLowerCase();
+  return (
+    name.endsWith(".ppt") ||
+    name.endsWith(".pptx") ||
+    file.type === "application/vnd.ms-powerpoint" ||
+    file.type === "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+  );
+}
+
+function isSupportedMediaFile(file) {
+  return file.type.startsWith("image/") || file.type.startsWith("video/") || isPowerPointFile(file);
+}
+
 function setMediaFile(file) {
+  window.clearTimeout(refreshTimer);
+  textureRequestId += 1;
   params.textureSource = "media";
   params.mediaClarity = 1;
   stopMediaTexture();
@@ -1541,6 +1941,13 @@ function setMediaFile(file) {
   applyResponsiveLayout();
   applyNightMode();
   setStatus("status.loading");
+
+  if (isPowerPointFile(file)) {
+    const texture = createPowerPointTexture(file);
+    setClothTexture(texture);
+    setStatus("status.ppt");
+    return;
+  }
 
   const url = URL.createObjectURL(file);
   mediaUrl = url;
@@ -1588,6 +1995,9 @@ function setMediaFile(file) {
       "loadeddata",
       async () => {
         mediaElement = video;
+        video.addEventListener("play", updateVideoControls);
+        video.addEventListener("pause", updateVideoControls);
+        video.addEventListener("volumechange", updateVideoControls);
         const didPlay = await firstPlayAttempt;
         if (!didPlay) armResumePlayback();
         if (didPlay && "requestVideoFrameCallback" in video) {
@@ -1600,6 +2010,7 @@ function setMediaFile(file) {
         texture.generateMipmaps = false;
         videoTexture = texture;
         setClothTexture(texture);
+        updateVideoControls();
         setStatus(playingWithSound ? "status.videoSound" : "status.tapSound");
       },
       { once: true },
@@ -1616,6 +2027,41 @@ function setMediaFile(file) {
   };
   image.src = url;
   mediaElement = image;
+}
+
+function createPowerPointTexture(file) {
+  const textureCanvas = document.createElement("canvas");
+  textureCanvas.width = 1200;
+  textureCanvas.height = 780;
+  const ctx = textureCanvas.getContext("2d");
+  const gradient = ctx.createLinearGradient(0, 0, 1200, 780);
+  gradient.addColorStop(0, "#111827");
+  gradient.addColorStop(0.55, "#1d4f7a");
+  gradient.addColorStop(1, "#f36f2f");
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, 1200, 780);
+
+  ctx.fillStyle = "rgba(255, 255, 255, 0.12)";
+  for (let i = 0; i < 9; i += 1) {
+    ctx.fillRect(120 + i * 112, 150 + Math.sin(i) * 28, 72, 360 - i * 14);
+  }
+
+  ctx.fillStyle = "rgba(255, 255, 255, 0.92)";
+  ctx.font = "900 90px Inter, sans-serif";
+  ctx.fillText("PowerPoint", 120, 300);
+  ctx.font = "800 42px Inter, sans-serif";
+  ctx.fillText(file.name.slice(0, 42), 126, 378);
+  ctx.font = "700 28px Inter, sans-serif";
+  ctx.fillStyle = "rgba(255, 255, 255, 0.78)";
+  ctx.fillText("Uploaded as a presentation texture", 126, 456);
+
+  const texture = new THREE.CanvasTexture(textureCanvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
+  texture.minFilter = THREE.LinearFilter;
+  texture.magFilter = THREE.LinearFilter;
+  texture.needsUpdate = true;
+  return texture;
 }
 
 function createContainedImageTexture(image) {
@@ -1675,6 +2121,7 @@ function stopMediaTexture() {
     videoTexture = null;
   }
   mediaElement = null;
+  updateVideoControls();
   if (mediaUrl) {
     URL.revokeObjectURL(mediaUrl);
     mediaUrl = "";
@@ -1685,6 +2132,7 @@ async function refreshHtmlTexture() {
   if (params.textureSource !== "html") return;
   if (textureBusy) return;
   textureBusy = true;
+  const requestId = textureRequestId;
   try {
     const rendered = await html2canvas(htmlSource, {
       backgroundColor: null,
@@ -1694,6 +2142,9 @@ async function refreshHtmlTexture() {
       logging: false,
       useCORS: true,
     });
+    if (params.textureSource !== "html" || requestId !== textureRequestId) {
+      return;
+    }
     const nextTexture = new THREE.CanvasTexture(rendered);
     nextTexture.colorSpace = THREE.SRGBColorSpace;
     nextTexture.anisotropy = renderer.capabilities.getMaxAnisotropy();
@@ -1816,17 +2267,17 @@ function updateCloth(delta, elapsed) {
       const radialZ = fromFanZ - fanWindDirection.z * forwardDistance;
       const radialDistance = Math.hypot(radialX * 0.62, radialY * 0.92, radialZ * 0.62);
       const radialLength = Math.max(0.001, Math.hypot(radialX, radialY, radialZ));
-      const coneRadius = Math.max(0.45, 0.82 + Math.max(0, forwardDistance) * 0.78);
+      const coneRadius = Math.max(0.62, 1.05 + Math.max(0, forwardDistance) * 0.92);
       const frontBand = smoothstep(0.08, 0.65, forwardDistance);
       const coneBand = smoothstep(coneRadius, coneRadius * 0.18, radialDistance);
       const distanceBand = smoothstep(8.8, 0.35, forwardDistance);
       const fanInfluence = frontBand * coneBand * distanceBand;
-      const wind = fanPower * pulse * fanInfluence * THREE.MathUtils.lerp(1.9, 0.88, clarity);
+      const wind = fanPower * pulse * fanInfluence * THREE.MathUtils.lerp(2.9, 1.35, clarity);
       const spreadX = radialX / radialLength;
       const spreadY = radialY / radialLength;
       const spreadZ = radialZ / radialLength;
-      const axisStrength = wind * sailBand * (1.1 + lowerBand * 0.95);
-      const spreadStrength = wind * sailBand * (0.16 + lowerBand * 0.32);
+      const axisStrength = wind * sailBand * (1.22 + lowerBand * 2.2);
+      const spreadStrength = wind * sailBand * (0.2 + lowerBand * 0.58);
 
       const targetX =
         original[p] +
@@ -1836,16 +2287,16 @@ function updateCloth(delta, elapsed) {
       const targetY =
         original[p + 1] -
         THREE.MathUtils.lerp(0.06, 0.02, clarity) * v * v +
-        sailBand * wind * (0.22 + lowerBand * 0.82) +
-        fanWindDirection.y * axisStrength * 0.45 +
-        spreadY * spreadStrength * 0.22 +
-        Math.sin(elapsed * 2.9 + u * 7.2) * sailBand * wind * 0.16;
+        sailBand * wind * (0.24 + lowerBand * 1.72) +
+        fanWindDirection.y * axisStrength * 0.62 +
+        spreadY * spreadStrength * 0.36 +
+        Math.sin(elapsed * 2.9 + u * 7.2) * sailBand * wind * (0.18 + lowerBand * 0.32);
       const targetZ =
         original[p + 2] +
-        fanWindDirection.z * axisStrength * 1.38 +
-        spreadZ * spreadStrength * 0.56 +
-        fineRipple * wind * 1.8 +
-        bottomCurl * wind * 1.8;
+        fanWindDirection.z * axisStrength * 2.15 +
+        spreadZ * spreadStrength * 0.76 +
+        fineRipple * wind * 2.35 +
+        bottomCurl * wind * 3.1;
 
       positions[p] = px + vx * 0.88 + (targetX - px) * 0.072;
       positions[p + 1] = py + vy * 0.88 + (targetY - py) * 0.076 + clothConfig.gravity * dt;
@@ -2024,9 +2475,7 @@ function applyNightMode() {
   clips.forEach((clip) => {
     clip.visible = !params.night;
   });
-  gulls.forEach((gull) => {
-    gull.visible = params.night;
-  });
+  applySceneObjectVisibility();
   scene.background = new THREE.Color(params.night ? 0x080d1a : 0xeef1f3);
   scene.fog = new THREE.Fog(
     params.night ? 0x080d1a : 0xeef1f3,
@@ -2087,6 +2536,8 @@ function updateCinemaSet(delta, elapsed) {
   ocean.geometry.computeVertexNormals();
 
   const tide = Math.sin(elapsed * 0.82) * 0.08 + Math.sin(elapsed * 1.7 + 0.6) * 0.025;
+  const crateBasePosition = crate.userData.controlBasePosition || crate.position;
+  const crateBaseRotation = crate.userData.controlBaseRotation || crate.rotation;
   const crateWave = getOceanWaveHeight(
     crate.userData.floatX,
     crate.userData.floatZ,
@@ -2096,24 +2547,32 @@ function updateCinemaSet(delta, elapsed) {
     crate.userData.wavePhase[2],
     crate.userData.wavePhase[3],
   );
+  crate.position.x = crateBasePosition.x;
+  crate.position.z = crateBasePosition.z;
   crate.position.y = crate.userData.baseY + crateWave + tide * 0.36;
-  crate.rotation.x = -0.06 + Math.sin(elapsed * 0.76 + 0.5) * 0.09;
-  crate.rotation.z = Math.sin(elapsed * 1.05) * 0.11;
-  crate.rotation.y = -0.34 + Math.sin(elapsed * 0.34) * 0.08;
+  crate.rotation.x = crateBaseRotation.x + Math.sin(elapsed * 0.76 + 0.5) * 0.09;
+  crate.rotation.z = crateBaseRotation.z + Math.sin(elapsed * 1.05) * 0.11;
+  crate.rotation.y = crateBaseRotation.y + Math.sin(elapsed * 0.34) * 0.08;
 
   updateGulls(delta, elapsed);
 }
 
 function updateGulls(delta, elapsed) {
   gulls.forEach((gull, index) => {
-    const side = gull.userData.wingSide;
-    const wingFlap = Math.sin(elapsed * 5.4 + gull.userData.phase) * 0.46;
-    gull.position.y = gull.userData.baseY;
-    gull.rotation.z = Math.sin(elapsed * 1.1 + index * 0.7) * 0.035;
-    gull.userData.leftWing.rotation.z = side * (0.1 + wingFlap);
-    gull.userData.rightWing.rotation.z = side * (0.1 - wingFlap * 0.72);
-    gull.userData.leftWing.rotation.x = 0.18 + Math.abs(wingFlap) * 0.18;
-    gull.userData.rightWing.rotation.x = -0.16 - Math.abs(wingFlap) * 0.12;
+    const wingBeat = Math.sin(elapsed * 5.8 + gull.userData.phase);
+    const flapAngle = THREE.MathUtils.degToRad(THREE.MathUtils.mapLinear(wingBeat, -1, 1, -75, 60));
+    const sweepAngle = THREE.MathUtils.degToRad(Math.max(0, -wingBeat) * 10);
+    const basePosition = gull.userData.controlBasePosition || gull.position;
+    const baseRotation = gull.userData.controlBaseRotation || gull.rotation;
+    gull.position.copy(basePosition);
+    gull.position.y += Math.sin(elapsed * 1.1 + index * 0.7) * 0.025;
+    gull.rotation.x = baseRotation.x;
+    gull.rotation.y = baseRotation.y;
+    gull.rotation.z = baseRotation.z + Math.sin(elapsed * 1.1 + index * 0.7) * 0.035;
+    gull.userData.leftWing.rotation.x = flapAngle;
+    gull.userData.rightWing.rotation.x = -flapAngle;
+    gull.userData.leftWing.rotation.y = gull.userData.wingSide * (0.08 + sweepAngle);
+    gull.userData.rightWing.rotation.y = gull.userData.wingSide * (0.08 + sweepAngle);
   });
 }
 
@@ -2122,22 +2581,27 @@ function updateStars(delta, elapsed) {
 
   const positionAttribute = stars.points.geometry.attributes.position;
   const colorAttribute = stars.points.geometry.attributes.color;
-  stars.points.material.size = 0.028 + params.starGlow * 0.026;
-  stars.points.material.opacity = 0.52 + params.starGlow * 0.28;
+  const starColor = new THREE.Color(params.starColor);
+  stars.points.material.size = params.starSize;
+  stars.points.material.opacity = THREE.MathUtils.clamp(0.34 + params.starBrightness * 0.36, 0.18, 0.98);
   applyMoonSettings(elapsed);
 
   for (let i = 0; i < stars.phases.length; i += 1) {
     const p = i * 3;
-    stars.positions[p] += delta * params.starGlow * (0.011 + (stars.phases[i] % 0.026));
-    stars.positions[p + 2] += delta * params.starGlow * 0.004;
+    stars.positions[p] += delta * params.starSpeed * (0.011 + (stars.phases[i] % 0.026));
+    stars.positions[p + 2] += delta * params.starSpeed * 0.004;
     if (stars.positions[p] > 12) stars.positions[p] = -12;
     if (stars.positions[p + 2] > 4.2) stars.positions[p + 2] = -12;
 
-    const twinkle = 0.54 + Math.sin(elapsed * 1.15 + stars.phases[i]) * 0.34 + Math.sin(elapsed * 2.4 + stars.phases[i] * 0.7) * 0.12;
-    const intensity = THREE.MathUtils.clamp(twinkle * params.starGlow, 0.18, 1.45);
-    stars.colors[p] = 0.92 * intensity;
-    stars.colors[p + 1] = 0.76 * intensity;
-    stars.colors[p + 2] = intensity;
+    const twinkle =
+      0.74 +
+      Math.sin(elapsed * 1.15 + stars.phases[i]) * 0.24 * params.starTwinkle +
+      Math.sin(elapsed * 2.4 + stars.phases[i] * 0.7) * 0.1 * params.starTwinkle;
+    const intensity = THREE.MathUtils.clamp(twinkle * params.starBrightness, 0.08, 2.3);
+    const warm = 0.88 + (stars.phases[i] % 0.2);
+    stars.colors[p] = starColor.r * intensity * warm;
+    stars.colors[p + 1] = starColor.g * intensity * (0.94 + (stars.phases[i] % 0.12));
+    stars.colors[p + 2] = starColor.b * intensity;
   }
 
   positionAttribute.needsUpdate = true;
